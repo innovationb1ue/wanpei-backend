@@ -38,6 +38,7 @@ func (u *User) Login(ctx *gin.Context) {
 	user, err := u.UserService.Login(ctx, params.Email, params.Password)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "message": "user not exist or wrong password"})
+		return
 	}
 	session := sessions.Default(ctx)
 	session.Set("user", user)
