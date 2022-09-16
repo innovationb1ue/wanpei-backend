@@ -55,3 +55,12 @@ func (u *User) GetUserByEmail(ctx context.Context, email string) (*models.User, 
 	}
 	return &user, nil
 }
+
+func (u *User) GetUserByMap(ctx context.Context, conditions map[string]any) (*models.User, error) {
+	var user models.User
+	res := u.DB.Where(conditions).First(&user)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	return &user, nil
+}

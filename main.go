@@ -13,7 +13,7 @@ func main() {
 
 	app := fx.New(
 		// provide infrastructures constructors
-		fx.Provide(models.NewDbConn, server.NewApp, models.NewSessionMgr, NewSettings),
+		fx.Provide(models.NewDbConn, server.NewApp, models.NewSessionStore, server.NewSettings),
 		// register all controllers by providing fx.Option
 		controller.RegisterControllers(),
 		mapper.RegisterMapper(),
