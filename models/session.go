@@ -2,10 +2,11 @@ package models
 
 import (
 	"github.com/gin-contrib/sessions/cookie"
+	"wanpei-backend/server"
 )
 
-func NewSessionStore() *cookie.Store {
+func NewSessionStore(settings *server.Settings) *cookie.Store {
 	// todo: migrate secret to settings file
-	CookieMgr := cookie.NewStore([]byte("todo: change secret here"))
+	CookieMgr := cookie.NewStore([]byte(settings.Secret))
 	return &CookieMgr
 }
