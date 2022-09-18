@@ -64,3 +64,12 @@ func (u *User) GetUserByMap(ctx context.Context, conditions map[string]any) (*mo
 	}
 	return &user, nil
 }
+
+func (u *User) AddGameById(ctx context.Context, games []string, userId string) error {
+	// a valid userId should be passed in. Do checks in service layer.
+	var user models.User
+	// get by primary key ID
+	u.DB.First(&user, userId)
+	// todo: finish the logic here
+	return nil
+}

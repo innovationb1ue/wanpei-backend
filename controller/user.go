@@ -19,11 +19,11 @@ type User struct {
 }
 
 func UserRoutes(App *gin.Engine, user User) {
-	App.POST("/user/register", user.RegisterHandler)
+	App.POST("/user/register", user.Register)
 	App.POST("/user/login", user.Login)
 	App.POST("/user/logout", user.LogOut)
 	App.GET("/user/logout", user.LogOut)
-	App.GET("/user/current", user.CurrentUser)
+	App.GET("/user/current", user.Current)
 }
 
 func (u *User) LogOut(ctx *gin.Context) {
@@ -63,7 +63,7 @@ func (u *User) Login(ctx *gin.Context) {
 	ctx.JSON(200, gin.H{"message": "ok"})
 }
 
-func (u *User) CurrentUser(ctx *gin.Context) {
+func (u *User) Current(ctx *gin.Context) {
 	session := sessions.Default(ctx)
 	if user := session.Get("user"); user != nil {
 		ctx.JSON(200, gin.H{"message": "ok", "data": user})
@@ -73,7 +73,7 @@ func (u *User) CurrentUser(ctx *gin.Context) {
 	}
 }
 
-func (u *User) RegisterHandler(c *gin.Context) {
+func (u *User) Register(c *gin.Context) {
 	// binding required fields. This will raise an error if empty.
 	email := c.PostForm("email")
 	password := c.PostForm("password")
@@ -92,4 +92,9 @@ func (u *User) RegisterHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"message": "ok"})
+}
+
+func (u *User) AddGame(ctx *gin.Context) {
+	// todo: logic here
+	return
 }

@@ -41,7 +41,12 @@ func (u *User) Login(ctx context.Context, email string, password string) (*model
 	if err != nil {
 		return nil, err
 	}
+	// replace sensitive data here
 	user.Password = ""
 	return user, nil
+}
 
+func (u *User) AddGameToUser(ctx context.Context, user *models.User) error {
+	//todo: finish the logic here
+	return nil
 }
