@@ -10,7 +10,7 @@ type Game struct {
 	DB *gorm.DB
 }
 
-func NewGame(db *models.DbConn) *Game {
+func NewGame(db *DbConn) *Game {
 	return &Game{
 		DB: db.Conn,
 	}

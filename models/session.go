@@ -6,7 +6,6 @@ import (
 )
 
 func NewSessionStore(settings *server.Settings) *cookie.Store {
-	// todo: migrate secret to settings file
 	CookieMgr := cookie.NewStore([]byte(settings.Secret))
 	return &CookieMgr
 }

@@ -1,4 +1,4 @@
-package models
+package mapper
 
 import (
 	"gorm.io/driver/mysql"

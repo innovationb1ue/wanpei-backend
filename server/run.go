@@ -6,8 +6,8 @@ import (
 	"net"
 )
 
-func Run(App *gin.Engine) error {
-	addr := "localhost:8096"
+func Run(App *gin.Engine, settings *Settings) error {
+	addr := settings.Addr
 	serviceLn, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"testing"
+	"wanpei-backend/mapper"
 	"wanpei-backend/models"
 )
 
@@ -15,7 +16,7 @@ func TestAddUser(t *testing.T) {
 		Email:    "123@456.com",
 		Games:    fmt.Sprintf("%v", []string{"CSGO", "DOTA2"}),
 	}
-	conn := models.NewDbConn()
+	conn := mapper.NewDbConn()
 	conn.Conn.Create(&user)
 	log.Print("Created user, id = ", user.ID)
 }

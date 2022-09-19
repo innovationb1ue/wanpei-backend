@@ -11,7 +11,7 @@ type User struct {
 	DB *gorm.DB
 }
 
-func NewUser(db *models.DbConn) *User {
+func NewUser(db *DbConn) *User {
 	return &User{DB: db.Conn}
 }
 

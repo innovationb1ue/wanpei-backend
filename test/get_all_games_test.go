@@ -3,11 +3,10 @@ package test
 import (
 	"testing"
 	"wanpei-backend/mapper"
-	"wanpei-backend/models"
 )
 
 func TestGetAllGames(t *testing.T) {
-	conn := models.NewDbConn()
+	conn := mapper.NewDbConn()
 	gameObj := mapper.Game{DB: conn.Conn}
 
 	games, err := gameObj.GetAllGames()

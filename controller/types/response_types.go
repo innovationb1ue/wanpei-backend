@@ -18,3 +18,11 @@ func (r BaseResponse) ToJson() []byte {
 	}
 	return b
 }
+
+func BaseErrorResponse() *BaseResponse {
+	return &BaseResponse{
+		Code:    -1,
+		Message: "default error message",
+		Data:    nil,
+	}
+}

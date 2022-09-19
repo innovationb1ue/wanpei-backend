@@ -5,6 +5,7 @@ import (
 	"github.com/go-redis/redis/v9"
 	"github.com/stretchr/testify/assert"
 	"log"
+	"strconv"
 	"testing"
 	"wanpei-backend/server"
 )
@@ -36,5 +37,30 @@ func TestRedisConnSet(t *testing.T) {
 
 	log.Println(matchUsers)
 
+	rdb.FlushAll(ctx)
+}
+
+func TestLPos(t *testing.T) {
+	settings := server.NewSettings()
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     settings.RedisAddr,
+		Password: settings.RedisPassword,
+		DB:       0,
+	})
+	ctx := context.Background()
+	rdb.LPush(ctx, settings.RedisMatchMakingUsersQueueName, 999)
+	rdb.LPush(ctx, settings.RedisMatchMakingUsersQueueName, 1)
+	rdb.LPush(ctx, settings.RedisMatchMakingUsersQueueName, 2)
+	res := rdb.LPos(ctx, settings.RedisMatchMakingUsersQueueName, strconv.Itoa(999), redis.LPosArgs{
+		Rank:   1,
+		MaxLen: 0,
+	})
+
+	t.Log(res.Val())
+	assert.NotNil(t, res.Val())
+
+	UserIds := rdb.LRange(ctx, settings.RedisMatchMakingUsersQueueName, 0, -1).Val()
+	assert.Contains(t, UserIds, "999")
+	t.Log(UserIds)
 	rdb.FlushAll(ctx)
 }
