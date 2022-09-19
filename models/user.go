@@ -11,5 +11,5 @@ type User struct {
 	Email      string `json:"email" binding:"required"`
 	Nickname   string `json:"nickname" `
 	Games      string `json:"games"`
-	UserRole   string `json:"user-role"`
+	UserRole   int    `json:"user_role"`
 }

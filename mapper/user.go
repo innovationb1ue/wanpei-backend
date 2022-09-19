@@ -65,6 +65,15 @@ func (u *User) GetUserByMap(ctx context.Context, conditions map[string]any) (*mo
 	return &user, nil
 }
 
+func (u *User) GetUserById(ctx context.Context, Id uint) (*models.User, error) {
+	var user models.User
+	res := u.DB.First(&user, Id)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	return &user, nil
+}
+
 func (u *User) AddGameById(ctx context.Context, games []string, userId string) error {
 	// a valid userId should be passed in. Do checks in service layer.
 	var user models.User

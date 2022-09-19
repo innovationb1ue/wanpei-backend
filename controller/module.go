@@ -7,5 +7,6 @@ func RegisterControllers() fx.Option {
 		ping,
 		UserRoutes,
 		GameRoutes,
+		MatchRoutes,
 	))
 }
