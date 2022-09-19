@@ -6,5 +6,6 @@ func RegisterControllers() fx.Option {
 	return fx.Module("controllers", fx.Invoke(
 		ping,
 		UserRoutes,
+		GameRoutes,
 	))
 }
