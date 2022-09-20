@@ -6,5 +6,8 @@ func RegisterServices() fx.Option {
 	return fx.Module("services", fx.Provide(
 		NewUser,
 		NewGame,
+		NewMatch,
+		NewToken,
+		NewSocket,
 	))
 }

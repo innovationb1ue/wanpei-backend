@@ -3,28 +3,34 @@ package mapper
 import (
 	"errors"
 	"github.com/gorilla/websocket"
+	"wanpei-backend/server"
 )
 
-type SocketManager struct {
-	Redis   *Redis
-	Sockets map[string]*websocket.Conn // one websocket for one user is probably enough
+type Socket struct {
+	Redis    *Redis
+	Sockets  map[uint]*websocket.Conn // memory storage. can be optimized to redis if necessary
+	Settings *server.Settings
 }
 
-func NewSocketManager(redis *Redis) *SocketManager {
-	return &SocketManager{
-		Redis:   redis,
-		Sockets: make(map[string]*websocket.Conn),
+func NewSocketManager(redis *Redis, settings *server.Settings) *Socket {
+	return &Socket{
+		Redis:    redis,
+		Sockets:  make(map[uint]*websocket.Conn),
+		Settings: settings,
 	}
 }
 
-func (s *SocketManager) AddSocket(name string, socket *websocket.Conn) {
-	s.Sockets[name] = socket
+func (s *Socket) AddSocket(ID uint, socket *websocket.Conn) {
+	s.Sockets[ID] = socket
 }
 
-func (s *SocketManager) GetSocket(name string) (*websocket.Conn, error) {
-	Socket := s.Sockets[name]
+func (s *Socket) GetSocket(ID uint) (*websocket.Conn, error) {
+	Socket := s.Sockets[ID]
 	if Socket == nil {
 		return nil, errors.New("socket not found")
 	}
 	return Socket, nil
+}
+func (s *Socket) DeleteSocket(ID uint) {
+	delete(s.Sockets, ID)
 }

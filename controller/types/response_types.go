@@ -5,13 +5,18 @@ import (
 	"log"
 )
 
-type BaseResponse struct {
+type BaseResponse[T any] struct {
 	Code    int    `json:"code,omitempty"`
 	Message string `json:"message,omitempty"`
-	Data    any    `json:"data,omitempty"`
+	Data    T      `json:"data,omitempty"`
 }
 
-func (r BaseResponse) ToJson() []byte {
+type BaseError struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+func (r BaseResponse[T]) ToJson() []byte {
 	b, err := json.Marshal(r)
 	if err != nil {
 		log.Fatal("error when make response json")
@@ -19,10 +24,9 @@ func (r BaseResponse) ToJson() []byte {
 	return b
 }
 
-func BaseErrorResponse() *BaseResponse {
-	return &BaseResponse{
+func BaseErrorResponse() *BaseError {
+	return &BaseError{
 		Code:    -1,
 		Message: "default error message",
-		Data:    nil,
 	}
 }

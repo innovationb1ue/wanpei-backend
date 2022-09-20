@@ -1,5 +1,7 @@
 package server
 
+import "time"
+
 type Settings struct {
 	Secret     string
 	Addr       string
@@ -10,6 +12,12 @@ type Settings struct {
 
 	// match making settings
 	RedisMatchMakingUsersQueueName string
+
+	// socket settings
+	PongWait        time.Duration
+	WriteWait       time.Duration
+	MaxMessageSize  int
+	HeartbeatPeriod time.Duration
 }
 
 func NewSettings() *Settings {
@@ -21,5 +29,9 @@ func NewSettings() *Settings {
 		RedisAddr:                      "localhost:6379",
 		RedisPassword:                  "",
 		RedisMatchMakingUsersQueueName: "match:users",
+		PongWait:                       5 * time.Second,
+		WriteWait:                      5 * time.Second,
+		MaxMessageSize:                 8192,
+		HeartbeatPeriod:                3 * time.Second,
 	}
 }

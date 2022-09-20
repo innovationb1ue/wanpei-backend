@@ -3,8 +3,8 @@ package mapper
 import (
 	"context"
 	"github.com/go-redis/redis/v9"
+	"log"
 	"strconv"
-	"wanpei-backend/models"
 	"wanpei-backend/server"
 )
 
@@ -20,24 +20,33 @@ func NewRedis(settings *server.Settings) *Redis {
 		Password: settings.RedisPassword,
 		DB:       0,
 	})
-	return &Redis{Client: rdb}
+	return &Redis{
+		Client:   rdb,
+		Settings: settings,
+	}
 }
 
-func (r *Redis) AppendUserToMatchPool(user *models.User) {
+func (r *Redis) AppendUserToMatchPool(ID uint) {
 	ctx := context.Background()
-	r.Client.LPush(ctx, r.Settings.RedisMatchMakingUsersQueueName, user.ID)
+	res := r.Client.LPush(ctx, r.Settings.RedisMatchMakingUsersQueueName, ID)
+	if res.Err() != nil {
+		log.Fatal("error when appending user to matchmaking pool")
+		return
+	}
 }
 
-func (r *Redis) CheckUserInMatchPool(user *models.User) bool {
+func (r *Redis) RemoveUserFromMatchPool(ID uint) {
 	ctx := context.Background()
-	res := r.Client.LPos(ctx, r.Settings.RedisMatchMakingUsersQueueName, strconv.Itoa(int(user.ID)), redis.LPosArgs{
-		Rank:   1,
-		MaxLen: 0,
-	})
-	return res.Val() == 0
+	r.Client.LRem(ctx, r.Settings.RedisMatchMakingUsersQueueName, 0, ID)
 }
 
-func (r *Redis) RemoveUserFromMatchPool(user *models.User) {
+func (r *Redis) GetAllFromQueue() []uint {
 	ctx := context.Background()
-	r.Client.LRem(ctx, r.Settings.RedisMatchMakingUsersQueueName, 0, user.ID)
+	UserIDs := r.Client.LRange(ctx, r.Settings.RedisMatchMakingUsersQueueName, 0, -1).Val()
+	var UserIDsUint []uint
+	for _, id := range UserIDs {
+		idInt, _ := strconv.Atoi(id)
+		UserIDsUint = append(UserIDsUint, uint(idInt))
+	}
+	return UserIDsUint
 }

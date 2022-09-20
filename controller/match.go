@@ -1,61 +1,85 @@
 package controller
 
 import (
-	"context"
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis/v9"
 	"github.com/gorilla/websocket"
 	"go.uber.org/fx"
+	"log"
 	"net/http"
 	"wanpei-backend/controller/types"
-	"wanpei-backend/models"
+	"wanpei-backend/services"
 	"wanpei-backend/utils"
 )
 
 // Match is the collection of dependencies
 type Match struct {
 	fx.In
-	rdb *redis.Client
+	MatchService  *services.Match
+	TokenService  *services.Token
+	SocketService *services.Socket
 }
 
 func MatchRoutes(App *gin.Engine, match Match) {
 	App.POST("/match/start", match.Start)
-	App.POST("/match/socket")
+	App.GET("/match/socket", match.Socket)
 }
 
 func (m *Match) Start(ctx *gin.Context) {
-	// validate login status
-	err := utils.ValidateLoginStatus(ctx)
+	// validate login status, will
+	user, err := utils.ValidateLoginStatus(ctx)
 	if err != nil {
+		ctx.JSON(404, types.BaseResponse[any]{
+			Code:    -1,
+			Message: "Not logged in",
+			Data:    nil,
+		})
 		return
 	}
-	// get the user
-	session := sessions.Default(ctx)
-	user := session.Get("user")
-	if user == nil {
-		ctx.JSON(404, gin.H{"code": -1, "message": "not logged in"})
-		return
-	}
-
-	//todo: make a websocket conn with the client & handle the heartbeat thing
-	userObj := user.(models.User)
-	redisCtx := context.Background()
-	m.rdb.LPush(redisCtx, "match:users", userObj.ID)
+	token := m.TokenService.GenerateRandom(user.ID)
+	ctx.JSON(200, types.BaseResponse[string]{
+		Code:    0,
+		Message: "ok",
+		Data:    token,
+	})
 }
 
-// Socket establishes a websocket with the client
 func (m *Match) Socket(ctx *gin.Context) {
+	// check valid token
+	token := ctx.Query("auth")
+	userID, err := m.TokenService.GetUserID(token)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, types.BaseErrorResponse())
+		return
+	}
+	// upgrade to websocket
 	var upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			// todo: check headers for CSRF here.
+			return true
+		},
 	}
 	w, r := ctx.Writer, ctx.Request
-	conn, err := upgrader.Upgrade(w, r, nil)
+	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, types.BaseErrorResponse())
+		ctx.JSON(http.StatusBadRequest, types.BaseError{
+			Code:    -1,
+			Message: "Upgrade to socket failed",
+		})
+		return
 	}
-	// placeholder
-	conn.Close()
-	//todo: make a websocket collection and append websockets to it
+	// add socket to collection
+	m.SocketService.AppendSocket(userID, ws)
+	// write a success message back to client
+	if err = ws.WriteJSON(gin.H{"message": "ok from server"}); err != nil {
+		return
+	}
+	// start heartbeat
+	go m.MatchService.StartHeartbeat(userID)
+	// append user to queue
+	m.MatchService.AppendToQueue(userID)
+
+	log.Println("Now queue = ", m.MatchService.RedisMapper.GetAllFromQueue())
+
 }
