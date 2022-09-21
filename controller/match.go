@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"go.uber.org/fx"
@@ -22,6 +23,7 @@ type Match struct {
 func MatchRoutes(App *gin.Engine, match Match) {
 	App.POST("/match/start", match.Start)
 	App.GET("/match/socket", match.Socket)
+	App.GET("/match/current", match.Current)
 }
 
 func (m *Match) Start(ctx *gin.Context) {
@@ -85,5 +87,15 @@ func (m *Match) Socket(ctx *gin.Context) {
 	}
 
 	log.Println("Now queue = ", m.MatchService.RedisMapper.GetAllFromQueue())
+
+}
+
+func (m *Match) Current(ctx *gin.Context) {
+	user := sessions.Default(ctx).Get("user")
+	if user != nil {
+		ctx.JSON(200, gin.H{"data": user})
+	} else {
+		ctx.JSON(200, "failed")
+	}
 
 }

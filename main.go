@@ -8,6 +8,7 @@ import (
 	"wanpei-backend/models"
 	"wanpei-backend/server"
 	"wanpei-backend/services"
+	"wanpei-backend/worker"
 )
 
 func main() {
@@ -22,7 +23,10 @@ func main() {
 		controller.RegisterControllers(),
 		mapper.RegisterMapper(),
 		services.RegisterServices(),
+		fx.Provide(worker.NewMatch),
+		fx.Invoke(worker.MatchWorker),
 		// invoke functions should run before the app start
-		fx.Invoke(server.Run))
+		fx.Invoke(server.Run),
+	)
 	app.Run() // run forever
 }

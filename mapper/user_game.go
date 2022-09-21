@@ -1,6 +1,9 @@
 package mapper
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+	"wanpei-backend/models"
+)
 
 type UserGame struct {
 	DB *gorm.DB
@@ -12,8 +15,8 @@ func NewUserGame(db *DbConn) *UserGame {
 	}
 }
 
-func (u *UserGame) GetUserGames(ID uint) []string {
-	var tags []string
+func (u *UserGame) GetUserGames(ID uint) []*models.UserGame {
+	var tags []*models.UserGame
 	u.DB.Where("ID = ?", ID).Find(&tags)
 	return tags
 }

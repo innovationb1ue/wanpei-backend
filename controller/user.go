@@ -65,6 +65,7 @@ func (u *User) Login(ctx *gin.Context) {
 
 func (u *User) Current(ctx *gin.Context) {
 	session := sessions.Default(ctx)
+
 	if user := session.Get("user"); user != nil {
 		ctx.JSON(200, gin.H{"message": "ok", "data": user})
 		return
