@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"github.com/go-redis/redis/v9"
 	"github.com/gorilla/websocket"
 	"go.uber.org/fx"
@@ -36,27 +37,33 @@ func NewMatch(p MatchIn) *Match {
 	}
 }
 
-func (m *Match) CheckUserInMatchPool(ID uint) bool {
+func (m *Match) CheckUserInMatchPool(ID uint) (bool, error) {
 	ctx := context.Background()
 	_, err := m.RedisMapper.Client.LPos(ctx, m.Settings.RedisMatchMakingUsersQueueName, strconv.Itoa(int(ID)), redis.LPosArgs{
 		Rank:   1,
 		MaxLen: 0,
 	}).Result()
 	if err == redis.Nil {
-		return false
+		return false, nil
 	}
-	return true
+	if err != nil {
+		return false, errors.New("Unknow error with redis")
+	}
+	return true, nil
 }
 
 // AppendToQueue append a user ID to Redis queue if it does not exist in queue
-func (m *Match) AppendToQueue(ID uint) bool {
-	isExist := m.CheckUserInMatchPool(ID)
+func (m *Match) AppendToQueue(ID uint) (bool, error) {
+	isExist, err := m.CheckUserInMatchPool(ID)
+	if err != nil {
+		return false, err
+	}
 	if isExist {
 		log.Println("user already in match pool")
-		return false
+		return false, nil
 	}
 	m.RedisMapper.AppendUserToMatchPool(ID)
-	return true
+	return true, nil
 }
 func (m *Match) RemoveFromQueue(ID uint) {
 	m.RedisMapper.RemoveUserFromMatchPool(ID)

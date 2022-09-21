@@ -9,6 +9,5 @@ import (
 func NewApp(SessionMgr *cookie.Store) *gin.Engine {
 	r := gin.Default()
 	r.Use(sessions.Sessions("wanpei-session", *SessionMgr))
-
 	return r
 }

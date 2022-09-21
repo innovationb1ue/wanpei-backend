@@ -3,17 +3,17 @@ package mapper
 import "gorm.io/gorm"
 
 type UserGame struct {
-	Client *gorm.DB
+	DB *gorm.DB
 }
 
-func NewUserGame(db *DbConn) *Game {
-	return &Game{
+func NewUserGame(db *DbConn) *UserGame {
+	return &UserGame{
 		DB: db.Conn,
 	}
 }
 
 func (u *UserGame) GetUserGames(ID uint) []string {
 	var tags []string
-	u.Client.Where("ID = ?", ID).Find(&tags)
+	u.DB.Where("ID = ?", ID).Find(&tags)
 	return tags
 }

@@ -78,7 +78,11 @@ func (m *Match) Socket(ctx *gin.Context) {
 	// start heartbeat
 	go m.MatchService.StartHeartbeat(userID)
 	// append user to queue
-	m.MatchService.AppendToQueue(userID)
+	_, err = m.MatchService.AppendToQueue(userID)
+	if err != nil {
+		log.Println("Append user to Redis queue failed.")
+		return
+	}
 
 	log.Println("Now queue = ", m.MatchService.RedisMapper.GetAllFromQueue())
 
