@@ -9,5 +9,6 @@ func RegisterMapper() fx.Option {
 		NewRedis,
 		NewSocketManager,
 		NewTokenManager,
+		NewUserGame,
 	))
 }

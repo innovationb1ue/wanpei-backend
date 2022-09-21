@@ -25,12 +25,13 @@ func (s *Socket) AddSocket(ID uint, socket *websocket.Conn) {
 }
 
 func (s *Socket) GetSocket(ID uint) (*websocket.Conn, error) {
-	Socket := s.Sockets[ID]
-	if Socket == nil {
+	socket := s.Sockets[ID]
+	if socket == nil {
 		return nil, errors.New("socket not found")
 	}
-	return Socket, nil
+	return socket, nil
 }
+
 func (s *Socket) DeleteSocket(ID uint) {
 	delete(s.Sockets, ID)
 }
