@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 	"wanpei-backend/mapper"
+	"wanpei-backend/repo"
 )
 
 type Match struct {
@@ -63,7 +64,6 @@ func (m *Match) matchSuccess(ctx context.Context, ID1 uint, ID2 uint) {
 	// need to think more about the concurrency and lifecycle problem.
 	// What if a client quit when we iter through the queue list and got matched with another?
 
-	// todo: delete userID from queue
 	// first check whether socket is still alive by having them
 	socket1, err := m.SocketMgr.GetSocket(ID1)
 	if err != nil {
@@ -73,13 +73,21 @@ func (m *Match) matchSuccess(ctx context.Context, ID1 uint, ID2 uint) {
 	if err != nil {
 		return
 	}
+
+	// make a room for users
+	hub := repo.NewHub()
+	go hub.Run()
+
 	// send success message back to client
-	err = socket1.WriteJSON(map[string]any{"action": "success", "data": nil})
+	err = socket1.WriteJSON(map[string]any{"action": "success", "data": map[string]string{"room": hub.ID}})
 	if err != nil {
 		return
 	}
-	err = socket2.WriteJSON(map[string]any{"action": "success", "data": nil})
+	err = socket2.WriteJSON(map[string]any{"action": "success", "data": map[string]string{"room": hub.ID}})
 	if err != nil {
 		return
 	}
+	m.RedisMapper.RemoveUserFromMatchPool(ID1)
+	m.RedisMapper.RemoveUserFromMatchPool(ID2)
+
 }
