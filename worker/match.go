@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 	"wanpei-backend/mapper"
-	"wanpei-backend/repo"
+	"wanpei-backend/models"
 )
 
 type Match struct {
@@ -13,14 +13,16 @@ type Match struct {
 	UserGameMapper *mapper.UserGame
 	SocketMgr      *mapper.Socket
 	RedisMapper    *mapper.Redis
+	HubMapper      *mapper.Hub
 }
 
-func NewMatch(UserMapper *mapper.User, UserGameMapper *mapper.UserGame, SocketMgr *mapper.Socket, RedisMapper *mapper.Redis) *Match {
+func NewMatch(UserMapper *mapper.User, UserGameMapper *mapper.UserGame, SocketMgr *mapper.Socket, RedisMapper *mapper.Redis, hubMapper *mapper.Hub) *Match {
 	return &Match{
 		UserMapper:     UserMapper,
 		UserGameMapper: UserGameMapper,
 		SocketMgr:      SocketMgr,
 		RedisMapper:    RedisMapper,
+		HubMapper:      hubMapper,
 	}
 }
 
@@ -46,6 +48,7 @@ func (m *Match) MakeMatch(ctx context.Context) {
 		for _, id := range userIDs {
 			idInt, _ := strconv.Atoi(id)
 			idUint := uint(idInt)
+			// todo: fix this to selected games, now fetch all games from database.
 			UserGameTags := m.UserGameMapper.GetUserGames(idUint)
 			// iter through tags of a single user
 			for _, userGame := range UserGameTags {
@@ -76,15 +79,17 @@ func (m *Match) matchSuccess(ctx context.Context, ID1 uint, ID2 uint) {
 	}
 
 	// make a room for users & run broadcast routine
-	hub := repo.NewHub()
+	hub := models.NewHub()
 	go hub.Run()
+	m.HubMapper.RegisterNewHub(hub)
+	// todo: handle hub destroy
 
 	// send success message back to client
-	err = socket1.WriteJSON(map[string]any{"action": "success", "data": map[string]string{"room": hub.ID}})
+	err = socket1.WriteJSON(map[string]any{"action": "success", "data": map[string]string{"ID": hub.ID}})
 	if err != nil {
 		return
 	}
-	err = socket2.WriteJSON(map[string]any{"action": "success", "data": map[string]string{"room": hub.ID}})
+	err = socket2.WriteJSON(map[string]any{"action": "success", "data": map[string]string{"ID": hub.ID}})
 	if err != nil {
 		return
 	}

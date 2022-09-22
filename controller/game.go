@@ -4,7 +4,7 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
-	"wanpei-backend/controller/types"
+	"wanpei-backend/controller/template"
 	"wanpei-backend/models"
 	"wanpei-backend/services"
 )
@@ -27,7 +27,7 @@ func (g *Game) GetAll(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"meesage": "fail to get all games"})
 		return
 	}
-	ctx.JSON(200, types.BaseResponse[[]*models.Game]{
+	ctx.JSON(200, template.BaseResponse[[]*models.Game]{
 		Code:    200,
 		Message: "ok",
 		Data:    games,

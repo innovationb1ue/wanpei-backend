@@ -2,13 +2,12 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package repo
+package models
 
 import (
 	"bytes"
 	"github.com/gorilla/websocket"
 	"log"
-	"net/http"
 	"time"
 )
 
@@ -47,12 +46,12 @@ type Client struct {
 	Send chan []byte
 }
 
-// readPump pumps messages from the websocket connection to the Hub.
+// ReadPump pumps messages from the websocket connection to the Hub.
 //
 // The application runs readPump in a per-connection goroutine. The application
 // ensures that there is at most one reader on a connection by executing all
 // reads from this goroutine.
-func (c *Client) readPump() {
+func (c *Client) ReadPump() {
 	defer func() {
 		c.Hub.Unregister <- c
 		_ = c.Conn.Close()
@@ -62,6 +61,7 @@ func (c *Client) readPump() {
 	c.Conn.SetPongHandler(func(string) error { c.Conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
 		_, message, err := c.Conn.ReadMessage()
+		log.Println("receive message", message)
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)
@@ -73,12 +73,12 @@ func (c *Client) readPump() {
 	}
 }
 
-// writePump pumps messages from the Hub to the websocket connection.
+// WritePump pumps messages from the Hub to the websocket connection.
 //
-// A goroutine running writePump is started for each connection. The
+// A goroutine running WritePump is started for each connection. The
 // application ensures that there is at most one writer to a connection by
 // executing all writes from this goroutine.
-func (c *Client) writePump() {
+func (c *Client) WritePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -117,20 +117,4 @@ func (c *Client) writePump() {
 			}
 		}
 	}
-}
-
-// serveWs handles websocket requests from the peer.
-func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	client := &Client{Hub: hub, Conn: conn, Send: make(chan []byte, 256)}
-	client.Hub.Register <- client
-
-	// Allow collection of memory referenced by the caller by doing all work in
-	// new goroutines.
-	go client.writePump()
-	go client.readPump()
 }

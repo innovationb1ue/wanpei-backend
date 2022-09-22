@@ -1,4 +1,4 @@
-package types
+package template
 
 import (
 	"encoding/json"

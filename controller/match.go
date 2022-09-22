@@ -7,7 +7,7 @@ import (
 	"go.uber.org/fx"
 	"log"
 	"net/http"
-	"wanpei-backend/controller/types"
+	"wanpei-backend/controller/template"
 	"wanpei-backend/services"
 	"wanpei-backend/utils"
 )
@@ -30,7 +30,7 @@ func (m *Match) Start(ctx *gin.Context) {
 	// validate login status, will
 	user, err := utils.ValidateLoginStatus(ctx)
 	if err != nil {
-		ctx.JSON(404, types.BaseResponse[any]{
+		ctx.JSON(404, template.BaseResponse[any]{
 			Code:    -1,
 			Message: "Not logged in",
 			Data:    nil,
@@ -38,7 +38,7 @@ func (m *Match) Start(ctx *gin.Context) {
 		return
 	}
 	token := m.TokenService.GenerateRandom(user.ID)
-	ctx.JSON(200, types.BaseResponse[string]{
+	ctx.JSON(200, template.BaseResponse[string]{
 		Code:    0,
 		Message: "ok",
 		Data:    token,
@@ -50,7 +50,7 @@ func (m *Match) Socket(ctx *gin.Context) {
 	token := ctx.Query("auth")
 	userID, err := m.TokenService.GetUserID(token)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, types.BaseErrorResponse())
+		ctx.JSON(http.StatusBadRequest, template.BaseErrorResponse())
 		return
 	}
 	// upgrade to websocket
@@ -65,7 +65,7 @@ func (m *Match) Socket(ctx *gin.Context) {
 	w, r := ctx.Writer, ctx.Request
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, types.BaseError{
+		ctx.JSON(http.StatusBadRequest, template.BaseError{
 			Code:    -1,
 			Message: "Upgrade to socket failed",
 		})

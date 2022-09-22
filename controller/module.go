@@ -8,6 +8,6 @@ func RegisterControllers() fx.Option {
 		UserRoutes,
 		GameRoutes,
 		MatchRoutes,
-		RoomRoutes,
+		HubRoutes,
 	))
 }

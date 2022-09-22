@@ -9,5 +9,6 @@ func RegisterServices() fx.Option {
 		NewMatch,
 		NewToken,
 		NewSocket,
+		NewHub,
 	))
 }

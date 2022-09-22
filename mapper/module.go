@@ -10,5 +10,6 @@ func RegisterMapper() fx.Option {
 		NewSocketManager,
 		NewTokenManager,
 		NewUserGame,
+		NewHub,
 	))
 }
