@@ -71,14 +71,15 @@ func (m *Match) Socket(ctx *gin.Context) {
 		})
 		return
 	}
-	// add socket to collection
-	m.SocketService.AppendSocket(userID, ws)
 	// write a success message back to client
 	if err = ws.WriteJSON(gin.H{"message": "ok from server"}); err != nil {
 		return
 	}
+	// todo: move those logics to service layer
+	// add socket to collection
+	m.SocketService.AppendSocket(userID, ws)
 	// start heartbeat
-	go m.MatchService.StartHeartbeat(userID)
+	go m.SocketService.StartHeartbeat(userID)
 	// append user to queue
 	_, err = m.MatchService.AppendToQueue(userID)
 	if err != nil {
@@ -97,5 +98,4 @@ func (m *Match) Current(ctx *gin.Context) {
 	} else {
 		ctx.JSON(200, "failed")
 	}
-
 }

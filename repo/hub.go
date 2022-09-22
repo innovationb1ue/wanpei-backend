@@ -3,23 +3,22 @@ package repo
 import (
 	"github.com/google/uuid"
 	"time"
-	"wanpei-backend/mapper"
 )
 
 // Hub maintains the set of active Client and broadcasts messages to the
 // Client.
 type Hub struct {
 	// Registered Client.
-	Client map[*mapper.Client]bool
+	Client map[*Client]bool
 
 	// Inbound messages from the Client.
 	Broadcast chan []byte
 
 	// Register requests from the Client.
-	Register chan *mapper.Client
+	Register chan *Client
 
 	// Unregister requests from Client.
-	Unregister chan *mapper.Client
+	Unregister chan *Client
 
 	ID string
 }
@@ -27,9 +26,9 @@ type Hub struct {
 func NewHub() *Hub {
 	return &Hub{
 		Broadcast:  make(chan []byte),
-		Register:   make(chan *mapper.Client),
-		Unregister: make(chan *mapper.Client),
-		Client:     make(map[*mapper.Client]bool),
+		Register:   make(chan *Client),
+		Unregister: make(chan *Client),
+		Client:     make(map[*Client]bool),
 		ID:         uuid.NewString(),
 	}
 }

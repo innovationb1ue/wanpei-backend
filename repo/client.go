@@ -2,16 +2,14 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package mapper
+package repo
 
 import (
 	"bytes"
+	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"time"
-	"wanpei-backend/repo"
-
-	"github.com/gorilla/websocket"
 )
 
 const (
@@ -40,7 +38,7 @@ var upgrader = websocket.Upgrader{
 
 // Client is a middleman between the websocket connection and the Hub.
 type Client struct {
-	Hub *repo.Hub
+	Hub *Hub
 
 	// The websocket connection.
 	Conn *websocket.Conn
@@ -92,7 +90,7 @@ func (c *Client) writePump() {
 			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The Hub closed the channel.
-				c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
+				_ = c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 
@@ -122,7 +120,7 @@ func (c *Client) writePump() {
 }
 
 // serveWs handles websocket requests from the peer.
-func serveWs(hub *repo.Hub, w http.ResponseWriter, r *http.Request) {
+func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)

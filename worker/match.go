@@ -29,6 +29,7 @@ func MatchWorker(match *Match) {
 }
 
 // MakeMatch query for all the users in the queue and make pairs at a fixed interval
+// should be started once at the App level
 func (m *Match) MakeMatch(ctx context.Context) {
 	ticker := time.NewTicker(3 * time.Second)
 	for {
@@ -74,7 +75,7 @@ func (m *Match) matchSuccess(ctx context.Context, ID1 uint, ID2 uint) {
 		return
 	}
 
-	// make a room for users
+	// make a room for users & run broadcast routine
 	hub := repo.NewHub()
 	go hub.Run()
 
@@ -87,7 +88,13 @@ func (m *Match) matchSuccess(ctx context.Context, ID1 uint, ID2 uint) {
 	if err != nil {
 		return
 	}
+
+	// move them our ot the match Pool
 	m.RedisMapper.RemoveUserFromMatchPool(ID1)
 	m.RedisMapper.RemoveUserFromMatchPool(ID2)
 
+	// close sockets without handling any further error.
+	// Users got matched so there is no need to preserve this result-informing websocket connections anymore.
+	_ = socket1.Close()
+	_ = socket2.Close()
 }

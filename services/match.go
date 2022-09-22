@@ -47,7 +47,7 @@ func (m *Match) CheckUserInMatchPool(ID uint) (bool, error) {
 		return false, nil
 	}
 	if err != nil {
-		return false, errors.New("Unknow error with redis")
+		return false, errors.New("unknown error with redis")
 	}
 	return true, nil
 }
@@ -67,32 +67,6 @@ func (m *Match) AppendToQueue(ID uint) (bool, error) {
 }
 func (m *Match) RemoveFromQueue(ID uint) {
 	m.RedisMapper.RemoveUserFromMatchPool(ID)
-}
-
-func (m *Match) StartHeartbeat(ID uint) {
-	ws := m.SocketMapper.Sockets[ID]
-	if ws == nil {
-		return
-	}
-	// defer close
-	defer func() {
-		m.SocketMapper.DeleteSocket(ID) // delete socket from map
-		m.RemoveFromQueue(ID)           // delete user from queue
-		err := ws.Close()               // close websocket
-		if err != nil {
-			log.Println("error when closing websocket: ", err)
-		}
-		log.Println("Now queue = ", m.RedisMapper.GetAllFromQueue())
-	}()
-	// possible manually stop the heartbeat by close the [done] channel
-	done := make(chan struct{})
-	dead := make(chan struct{})
-	// start heartbeats
-	go ping(ws, done, dead, m.Settings)
-	// block until heartbeat dead
-	<-dead
-	log.Println("a websocket died.")
-	return
 }
 
 func ping(ws *websocket.Conn, done chan struct{}, dead chan struct{}, settings *server.Settings) {
