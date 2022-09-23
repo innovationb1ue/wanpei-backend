@@ -29,6 +29,8 @@ type Match struct {
 }
 
 func NewMatch(p MatchIn) *Match {
+	// flush all in the queue when restarting the match service
+	p.RedisMapper.FlushAll()
 	return &Match{
 		UserMapper:   p.UserMapper,
 		RedisMapper:  p.RedisMapper,

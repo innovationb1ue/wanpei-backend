@@ -13,7 +13,7 @@ type Hub struct {
 	Client map[*Client]bool
 
 	// Inbound messages from the Client.
-	Broadcast chan []byte
+	Broadcast chan *ChatSocketMessage
 
 	// Register requests from the Client.
 	Register chan *Client
@@ -26,7 +26,7 @@ type Hub struct {
 
 func NewHub() *Hub {
 	return &Hub{
-		Broadcast:  make(chan []byte),
+		Broadcast:  make(chan *ChatSocketMessage),
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
 		Client:     make(map[*Client]bool),
@@ -47,6 +47,7 @@ func (h *Hub) Run() {
 				close(client.Send)
 			}
 		case message := <-h.Broadcast:
+			// iter through clients and send messages one by one
 			for client := range h.Client {
 				select {
 				case client.Send <- message:
@@ -58,8 +59,8 @@ func (h *Hub) Run() {
 			}
 		case <-ticker.C:
 			{
-				log.Println("closed one hub")
 				if len(h.Client) == 0 {
+					log.Println("closed one hub")
 					return
 				}
 			}

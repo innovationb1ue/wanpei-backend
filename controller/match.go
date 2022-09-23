@@ -7,7 +7,9 @@ import (
 	"go.uber.org/fx"
 	"log"
 	"net/http"
+	"strings"
 	"wanpei-backend/controller/template"
+	"wanpei-backend/repo"
 	"wanpei-backend/services"
 	"wanpei-backend/utils"
 )
@@ -18,6 +20,7 @@ type Match struct {
 	MatchService  *services.Match
 	TokenService  *services.Token
 	SocketService *services.Socket
+	UserGameRepo  *repo.QueueUserGame
 }
 
 func MatchRoutes(App *gin.Engine, match Match) {
@@ -37,6 +40,13 @@ func (m *Match) Start(ctx *gin.Context) {
 		})
 		return
 	}
+	jsonHolder := struct {
+		SelectedGame []int `json:"selectedGame"`
+	}{}
+	err = ctx.ShouldBindJSON(&jsonHolder)
+	if err != nil {
+		return
+	}
 	token := m.TokenService.GenerateRandom(user.ID)
 	ctx.JSON(200, template.BaseResponse[string]{
 		Code:    0,
@@ -53,6 +63,16 @@ func (m *Match) Socket(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, template.BaseErrorResponse())
 		return
 	}
+	// get selected games
+	GamesStr, isSelected := ctx.GetQuery("selectedGame")
+	if !isSelected {
+		ctx.JSON(http.StatusBadRequest, template.BaseErrorResponse())
+		return
+	}
+	gameIdStrArr := strings.Split(GamesStr, ",")
+	GamesInt := utils.AllAsInt[int](gameIdStrArr)
+	m.UserGameRepo.UserGame[userID] = GamesInt
+
 	// upgrade to websocket
 	var upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -71,11 +91,12 @@ func (m *Match) Socket(ctx *gin.Context) {
 		})
 		return
 	}
+
+	// todo: move those logics to service layer
 	// write a success message back to client
 	if err = ws.WriteJSON(gin.H{"message": "ok from server"}); err != nil {
 		return
 	}
-	// todo: move those logics to service layer
 	// add socket to collection
 	m.SocketService.AppendSocket(userID, ws)
 	// start heartbeat

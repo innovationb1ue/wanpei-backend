@@ -50,3 +50,7 @@ func (r *Redis) GetAllFromQueue() []uint {
 	}
 	return UserIDsUint
 }
+
+func (r *Redis) FlushAll() {
+	r.Client.FlushAll(context.Background())
+}

@@ -6,6 +6,7 @@ import (
 	"time"
 	"wanpei-backend/mapper"
 	"wanpei-backend/models"
+	"wanpei-backend/repo"
 )
 
 type Match struct {
@@ -14,15 +15,18 @@ type Match struct {
 	SocketMgr      *mapper.Socket
 	RedisMapper    *mapper.Redis
 	HubMapper      *mapper.Hub
+	QueueUserGame  *repo.QueueUserGame
 }
 
-func NewMatch(UserMapper *mapper.User, UserGameMapper *mapper.UserGame, SocketMgr *mapper.Socket, RedisMapper *mapper.Redis, hubMapper *mapper.Hub) *Match {
+func NewMatch(UserMapper *mapper.User, UserGameMapper *mapper.UserGame,
+	SocketMgr *mapper.Socket, RedisMapper *mapper.Redis, hubMapper *mapper.Hub, queueUserGame *repo.QueueUserGame) *Match {
 	return &Match{
 		UserMapper:     UserMapper,
 		UserGameMapper: UserGameMapper,
 		SocketMgr:      SocketMgr,
 		RedisMapper:    RedisMapper,
 		HubMapper:      hubMapper,
+		QueueUserGame:  queueUserGame,
 	}
 }
 
@@ -48,15 +52,15 @@ func (m *Match) MakeMatch(ctx context.Context) {
 		for _, id := range userIDs {
 			idInt, _ := strconv.Atoi(id)
 			idUint := uint(idInt)
-			// todo: fix this to selected games, now fetch all games from database.
-			UserGameTags := m.UserGameMapper.GetUserGames(idUint)
+			//UserGameTags := m.UserGameMapper.GetUserGames(idUint) // this get user game from database
+			userGameIDs := m.QueueUserGame.UserGame[idUint]
 			// iter through tags of a single user
-			for _, userGame := range UserGameTags {
-				if allTags[userGame.GameID] != 0 {
-					go m.matchSuccess(ctx, idUint, allTags[userGame.GameID])
-					delete(allTags, userGame.GameID)
+			for _, gameID := range userGameIDs {
+				if allTags[gameID] != 0 {
+					go m.matchSuccess(ctx, idUint, allTags[gameID])
+					delete(allTags, gameID)
 				} else {
-					allTags[userGame.GameID] = userGame.ID
+					allTags[gameID] = idUint
 				}
 			}
 		}

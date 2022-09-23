@@ -54,6 +54,14 @@ func (u *User) Login(ctx *gin.Context) {
 		return
 	}
 	session := sessions.Default(ctx)
+	session.Options(sessions.Options{
+		Path:     "",
+		Domain:   "",
+		MaxAge:   60 * 60 * 12,
+		Secure:   false,
+		HttpOnly: false,
+		SameSite: 0,
+	})
 	session.Set("user", user)
 	err = session.Save()
 	if err != nil {

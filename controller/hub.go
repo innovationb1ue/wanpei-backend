@@ -57,7 +57,7 @@ func (r *Room) ConnectHub(ctx *gin.Context) {
 	}
 
 	// spawn server-side client object
-	client := &models.Client{Hub: hub, Conn: conn, Send: make(chan []byte, 256)}
+	client := &models.Client{Hub: hub, Conn: conn, Send: make(chan *models.ChatSocketMessage, 256)}
 	client.Hub.Register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in new goroutines.
