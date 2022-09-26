@@ -24,7 +24,22 @@ func NewSocket(socketMapper *mapper.Socket, redisMapper *mapper.Redis, matchServ
 }
 
 func (s *Socket) AppendSocket(ID uint, ws *websocket.Conn) {
+	// register websocket
 	s.SocketMapper.AddSocket(ID, ws)
+	// start heartbeat
+	go s.StartHeartbeat(ID)
+	// append user to queue
+	_, err := s.MatchService.AppendToQueue(ID)
+	if err != nil {
+		log.Println("Append user to Redis queue failed.", err)
+		return
+	}
+}
+
+func (s *Socket) RemoveSocket(ID uint) error {
+	s.MatchService.RemoveFromQueue(ID) // remove from Redis queue
+	s.SocketMapper.DeleteSocket(ID)    // unregister WebSocket connection
+	return nil
 }
 
 func (s *Socket) StartHeartbeat(ID uint) {

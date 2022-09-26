@@ -1,11 +1,6 @@
-// Copyright 2013 The Gorilla WebSocket Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 package models
 
 import (
-	"bytes"
 	"encoding/json"
 	"github.com/gorilla/websocket"
 	"log"
@@ -25,16 +20,6 @@ const (
 	// Maximum message size allowed from peer.
 	maxMessageSize = 512
 )
-
-var (
-	newline = []byte{'\n'}
-	space   = []byte{' '}
-)
-
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-}
 
 type ChatSocketMessage struct {
 	Action string       `json:"action,omitempty"`
@@ -81,13 +66,11 @@ func (c *Client) ReadPump() {
 		log.Println(string(message))
 		var receivedMsg *ChatSocketMessage
 		err = json.Unmarshal(message, &receivedMsg)
-
 		if err != nil {
 			log.Println("cant phrase received chat socket message. ")
 		}
 		// todo: determine sender here
 
-		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 		c.Hub.Broadcast <- receivedMsg
 	}
 }

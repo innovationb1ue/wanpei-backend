@@ -1,7 +1,7 @@
 package repo
 
 type QueueUserGame struct {
-	UserGame map[uint][]int
+	UserGame map[uint][]int // store the selected game for each user in queue.
 }
 
 func NewQueueUserGame() *QueueUserGame {

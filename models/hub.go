@@ -57,6 +57,7 @@ func (h *Hub) Run() {
 					delete(h.Client, client)
 				}
 			}
+		// hub expired
 		case <-ticker.C:
 			{
 				if len(h.Client) == 0 {

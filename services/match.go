@@ -67,8 +67,10 @@ func (m *Match) AppendToQueue(ID uint) (bool, error) {
 	m.RedisMapper.AppendUserToMatchPool(ID)
 	return true, nil
 }
+
+// RemoveFromQueue remove the user from match making queue. If user do not exist, it is a no-op.
 func (m *Match) RemoveFromQueue(ID uint) {
-	m.RedisMapper.RemoveUserFromMatchPool(ID)
+	_ = m.RedisMapper.RemoveUserFromMatchPool(ID)
 }
 
 func ping(ws *websocket.Conn, done chan struct{}, dead chan struct{}, settings *server.Settings) {

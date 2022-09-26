@@ -7,36 +7,36 @@ import (
 	"log"
 	"net/http"
 	"wanpei-backend/controller/template"
-	"wanpei-backend/models"
 	"wanpei-backend/services"
 )
 
-type Room struct {
+type HubDeps struct {
 	fx.In
-	Hub *services.Hub
+	Hub    *services.Hub
+	Client *services.Client
 }
 
-func HubRoutes(App *gin.Engine, Room Room) {
-	App.GET("/hub", Room.ConnectHub)
+func HubRoutes(App *gin.Engine, Hub HubDeps) {
+	App.GET("/hub", Hub.JoinHub)
 }
 
-// ConnectHub establish Websockets with users.
-func (r *Room) ConnectHub(ctx *gin.Context) {
+// JoinHub establish Websockets with users.
+func (r *HubDeps) JoinHub(ctx *gin.Context) {
 	// check require parameter: ID
 	hubID := ctx.Query("ID")
 	if hubID == "" {
 		ctx.JSON(http.StatusBadRequest, template.BaseError{
 			Code:    -1,
-			Message: "empty ConnectHub ID",
+			Message: "empty hub ID",
 		})
 		return
 	}
-	// get the ConnectHub
+	// get the JoinHub
 	hub, err := r.Hub.GetHub(hubID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, template.BaseError{
 			Code:    -1,
-			Message: "no such ConnectHub",
+			Message: "no such JoinHub",
 		})
 		return
 	}
@@ -47,6 +47,7 @@ func (r *Room) ConnectHub(ctx *gin.Context) {
 		WriteBufferSize: 1024,
 		CheckOrigin: func(r *http.Request) bool {
 			// todo: check headers for CSRF here.
+			log.Println("Request Origin = ", r.Header.Get("Origin"))
 			return true
 		},
 	}
@@ -55,12 +56,6 @@ func (r *Room) ConnectHub(ctx *gin.Context) {
 		log.Println(err)
 		return
 	}
-
-	// spawn server-side client object
-	client := &models.Client{Hub: hub, Conn: conn, Send: make(chan *models.ChatSocketMessage, 256)}
-	client.Hub.Register <- client
-
-	// Allow collection of memory referenced by the caller by doing all work in new goroutines.
-	go client.WritePump()
-	go client.ReadPump()
+	// register client with Hub and start services
+	r.Client.RegisterClient(hub, conn)
 }

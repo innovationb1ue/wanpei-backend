@@ -6,6 +6,8 @@ import (
 	"wanpei-backend/server"
 )
 
+// Socket Mapper holds a mapping of user ID to the WebSocket to user if the user is in matching queue.
+
 type Socket struct {
 	Redis    *Redis
 	Sockets  map[uint]*websocket.Conn // memory storage. can be optimized to redis if necessary
@@ -33,5 +35,8 @@ func (s *Socket) GetSocket(ID uint) (*websocket.Conn, error) {
 }
 
 func (s *Socket) DeleteSocket(ID uint) {
+	if socket, ok := s.Sockets[ID]; ok {
+		_ = socket.Close()
+	}
 	delete(s.Sockets, ID)
 }

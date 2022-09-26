@@ -25,12 +25,13 @@ type Match struct {
 
 func MatchRoutes(App *gin.Engine, match Match) {
 	App.POST("/match/start", match.Start)
+	App.POST("/match/stop", match.Stop)
 	App.GET("/match/socket", match.Socket)
 	App.GET("/match/current", match.Current)
 }
 
 func (m *Match) Start(ctx *gin.Context) {
-	// validate login status, will
+	// validate login status
 	user, err := utils.ValidateLoginStatus(ctx)
 	if err != nil {
 		ctx.JSON(404, template.BaseResponse[any]{
@@ -53,6 +54,25 @@ func (m *Match) Start(ctx *gin.Context) {
 		Message: "ok",
 		Data:    token,
 	})
+}
+
+func (m *Match) Stop(ctx *gin.Context) {
+	user, err := utils.ValidateLoginStatus(ctx)
+	if err != nil {
+		ctx.JSON(404, template.BaseResponse[any]{
+			Code:    -1,
+			Message: "Not logged in",
+			Data:    nil,
+		})
+		return
+	}
+	m.MatchService.RemoveFromQueue(user.ID)
+	ctx.JSON(200, template.BaseResponse[any]{
+		Code:    1,
+		Message: "ok",
+		Data:    nil,
+	})
+	log.Println("one stopped match making, now queue = ", m.MatchService.RedisMapper.GetAllFromQueue())
 }
 
 func (m *Match) Socket(ctx *gin.Context) {
@@ -82,8 +102,7 @@ func (m *Match) Socket(ctx *gin.Context) {
 			return true
 		},
 	}
-	w, r := ctx.Writer, ctx.Request
-	ws, err := upgrader.Upgrade(w, r, nil)
+	ws, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, template.BaseError{
 			Code:    -1,
@@ -92,22 +111,10 @@ func (m *Match) Socket(ctx *gin.Context) {
 		return
 	}
 
-	// todo: move those logics to service layer
-	// write a success message back to client
-	if err = ws.WriteJSON(gin.H{"message": "ok from server"}); err != nil {
-		return
-	}
-	// add socket to collection
+	// add socket to collection & put user in queue
 	m.SocketService.AppendSocket(userID, ws)
-	// start heartbeat
-	go m.SocketService.StartHeartbeat(userID)
-	// append user to queue
-	_, err = m.MatchService.AppendToQueue(userID)
-	if err != nil {
-		log.Println("Append user to Redis queue failed.")
-		return
-	}
 
+	// debug message
 	log.Println("Now queue = ", m.MatchService.RedisMapper.GetAllFromQueue())
 
 }

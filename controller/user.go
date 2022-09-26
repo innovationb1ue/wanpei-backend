@@ -24,11 +24,20 @@ func UserRoutes(App *gin.Engine, user User) {
 	App.POST("/user/logout", user.LogOut)
 	App.GET("/user/logout", user.LogOut)
 	App.GET("/user/current", user.Current)
+	App.POST("/user/modify", user.Modify)
 }
 
 func (u *User) LogOut(ctx *gin.Context) {
 	session := sessions.Default(ctx)
-	session.Delete("user")
+	session.Options(sessions.Options{
+		Path:     "/",
+		Domain:   "",
+		MaxAge:   -1,
+		Secure:   false,
+		HttpOnly: false,
+		SameSite: 0,
+	})
+	session.Clear()
 	if err := session.Save(); err != nil {
 		log.Fatal(err)
 		return
@@ -55,9 +64,9 @@ func (u *User) Login(ctx *gin.Context) {
 	}
 	session := sessions.Default(ctx)
 	session.Options(sessions.Options{
-		Path:     "",
+		Path:     "/",
 		Domain:   "",
-		MaxAge:   60 * 60 * 12,
+		MaxAge:   60 * 60 * 24, // 24 hours
 		Secure:   false,
 		HttpOnly: false,
 		SameSite: 0,
@@ -73,7 +82,6 @@ func (u *User) Login(ctx *gin.Context) {
 
 func (u *User) Current(ctx *gin.Context) {
 	session := sessions.Default(ctx)
-
 	if user := session.Get("user"); user != nil {
 		ctx.JSON(200, gin.H{"message": "ok", "data": user})
 		return
@@ -106,4 +114,8 @@ func (u *User) Register(c *gin.Context) {
 func (u *User) AddGame(ctx *gin.Context) {
 	// todo: logic here
 	return
+}
+
+func (u *User) Modify() {
+	//todo: handle user modify info request
 }

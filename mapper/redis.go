@@ -35,9 +35,14 @@ func (r *Redis) AppendUserToMatchPool(ID uint) {
 	}
 }
 
-func (r *Redis) RemoveUserFromMatchPool(ID uint) {
+func (r *Redis) RemoveUserFromMatchPool(ID uint) error {
 	ctx := context.Background()
-	r.Client.LRem(ctx, r.Settings.RedisMatchMakingUsersQueueName, 0, ID)
+	res := r.Client.LRem(ctx, r.Settings.RedisMatchMakingUsersQueueName, 0, ID)
+	if res.Err() != nil {
+		return res.Err()
+	} else {
+		return nil
+	}
 }
 
 func (r *Redis) GetAllFromQueue() []uint {
