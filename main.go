@@ -13,9 +13,8 @@ import (
 )
 
 func main() {
-	// register user type to be saved in sessions
-	// todo: move it to a independent file
 	gob.Register(models.User{})
+	gob.Register(models.UserInsensitive{})
 	// start app
 	app := fx.New(
 		// provide infrastructures constructors

@@ -15,11 +15,27 @@ func NewHub(hubMapper *mapper.Hub) *Hub {
 	}
 }
 
-func (h *Hub) GetHub(name string) (*models.Hub, error) {
-	hub, err := h.HubMapper.GetHub(name)
+func (h *Hub) GetHub(ID string) (*models.Hub, error) {
+	hub, err := h.HubMapper.GetHub(ID)
 	if err != nil {
 		return nil, err
 	} else {
 		return hub, nil
 	}
+}
+
+func (h *Hub) GetHubUsers(ID string) []models.UserSimple {
+	hub, err := h.HubMapper.GetHub(ID)
+	if err != nil {
+		return nil
+	}
+	var users []models.UserSimple
+	for _, u := range hub.Users {
+		users = append(users, models.UserSimple{
+			Nickname:  u.Nickname,
+			AvatarURL: "",
+		})
+	}
+	return users
+
 }

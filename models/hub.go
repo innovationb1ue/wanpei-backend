@@ -21,16 +21,22 @@ type Hub struct {
 	// Unregister requests from Client.
 	Unregister chan *Client
 
+	UserRegister chan *UserInsensitive
+
+	Users map[uint]*UserInsensitive
+
 	ID string
 }
 
 func NewHub() *Hub {
 	return &Hub{
-		Broadcast:  make(chan *ChatSocketMessage),
-		Register:   make(chan *Client),
-		Unregister: make(chan *Client),
-		Client:     make(map[*Client]bool),
-		ID:         uuid.NewString(),
+		Client:       make(map[*Client]bool),
+		Broadcast:    make(chan *ChatSocketMessage),
+		Register:     make(chan *Client),
+		Unregister:   make(chan *Client),
+		UserRegister: make(chan *UserInsensitive),
+		Users:        make(map[uint]*UserInsensitive),
+		ID:           uuid.NewString(),
 	}
 }
 
@@ -45,6 +51,11 @@ func (h *Hub) Run() {
 			if _, ok := h.Client[client]; ok {
 				delete(h.Client, client)
 				close(client.Send)
+			}
+		case user := <-h.UserRegister:
+			{
+				log.Println("register one user", user)
+				h.Users[user.ID] = user
 			}
 		case message := <-h.Broadcast:
 			// iter through clients and send messages one by one

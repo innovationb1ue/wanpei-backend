@@ -69,7 +69,6 @@ func (c *Client) ReadPump() {
 		if err != nil {
 			log.Println("cant phrase received chat socket message. ")
 		}
-		// todo: determine sender here
 
 		c.Hub.Broadcast <- receivedMsg
 	}
@@ -90,7 +89,7 @@ func (c *Client) WritePump() {
 		select {
 		case message, ok := <-c.Send:
 			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
-			// The Hub closed the channel.
+			// The HubService closed the channel.
 			if !ok {
 				_ = c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return

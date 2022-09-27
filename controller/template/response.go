@@ -6,7 +6,7 @@ import (
 )
 
 type BaseResponse[T any] struct {
-	Code    int    `json:"code,omitempty"`
+	Code    int    `json:"code"`
 	Message string `json:"message,omitempty"`
 	Data    T      `json:"data,omitempty"`
 }
@@ -28,5 +28,12 @@ func BaseErrorResponse() *BaseError {
 	return &BaseError{
 		Code:    -1,
 		Message: "default error message",
+	}
+}
+
+func BaseSuccessResponse() *BaseResponse[any] {
+	return &BaseResponse[any]{
+		Code:    1,
+		Message: "ok",
 	}
 }

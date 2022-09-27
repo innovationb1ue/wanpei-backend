@@ -68,10 +68,6 @@ func (m *Match) MakeMatch(ctx context.Context) {
 }
 
 func (m *Match) matchSuccess(ctx context.Context, ID1 uint, ID2 uint) {
-	//todo: finish the logic here after reading best practices.
-	// need to think more about the concurrency and lifecycle problem.
-	// What if a client quit when we iter through the queue list and got matched with another?
-
 	// first check whether socket is still alive by having them
 	socket1, err := m.SocketMgr.GetSocket(ID1)
 	if err != nil {
@@ -84,9 +80,8 @@ func (m *Match) matchSuccess(ctx context.Context, ID1 uint, ID2 uint) {
 
 	// make a room for users & run broadcast routine
 	hub := models.NewHub()
-	go hub.Run()
+	go hub.Run() // hub will self destroy if no user in it
 	m.HubMapper.RegisterNewHub(hub)
-	// todo: handle hub destroy
 
 	// send success message back to client
 	err = socket1.WriteJSON(map[string]any{"action": "success", "data": map[string]string{"ID": hub.ID}})
@@ -99,11 +94,11 @@ func (m *Match) matchSuccess(ctx context.Context, ID1 uint, ID2 uint) {
 	}
 
 	// move them our ot the match Pool
-	m.RedisMapper.RemoveUserFromMatchPool(ID1)
-	m.RedisMapper.RemoveUserFromMatchPool(ID2)
+	_ = m.RedisMapper.RemoveUserFromMatchPool(ID1)
+	_ = m.RedisMapper.RemoveUserFromMatchPool(ID2)
 
 	// close sockets without handling any further error.
-	// Users got matched so there is no need to preserve this result-informing websocket connections anymore.
+	// UserRegister got matched so there is no need to preserve this result-informing websocket connections anymore.
 	_ = socket1.Close()
 	_ = socket2.Close()
 }

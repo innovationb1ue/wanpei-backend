@@ -7,12 +7,13 @@ import (
 	"wanpei-backend/models"
 )
 
-func ValidateLoginStatus(ctx *gin.Context) (*models.User, error) {
+func ValidateLoginStatus(ctx *gin.Context) (*models.UserInsensitive, error) {
 	session := sessions.Default(ctx)
 	user := session.Get("user")
-	if user == nil {
+	userObj, ok := user.(models.UserInsensitive)
+
+	if user == nil || !ok || userObj.ID < 0 {
 		return nil, errors.New("not logged in")
 	}
-	userObj := user.(models.User)
 	return &userObj, nil
 }

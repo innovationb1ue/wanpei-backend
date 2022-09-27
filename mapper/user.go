@@ -33,14 +33,9 @@ func (u *User) DeleteUserById(ctx context.Context, userId string) error {
 	return nil
 }
 
-func (u *User) UpdateUser(ctx context.Context, user *models.User) error {
-	oldUser := &models.User{}
-	res := u.DB.First(&oldUser, user.ID)
-	if res.Error != nil {
-		return res.Error
-	}
-	oldUser = user
-	res = u.DB.Save(&oldUser)
+func (u *User) UpdateUser(ctx context.Context, user *models.UserInsensitive) error {
+
+	res := u.DB.Model(&user).Updates(user)
 	if res.Error != nil {
 		return res.Error
 	}

@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"gorm.io/gorm"
 	"wanpei-backend/mapper"
 	"wanpei-backend/models"
 	"wanpei-backend/server"
@@ -34,19 +35,53 @@ func (u *User) CreateUser(ctx context.Context, user *models.User) error {
 	return nil
 }
 
-func (u *User) Login(ctx context.Context, email string, password string) (*models.User, error) {
+func (u *User) Login(ctx context.Context, email string, password string) (*models.UserInsensitive, error) {
 	password = utils.Sha256WithSalt(password, u.Setting.Sha256Salt)
 	user, err := u.UserMapper.GetUserByMap(ctx, map[string]any{"email": email,
 		"password": password})
 	if err != nil {
 		return nil, err
 	}
-	// replace sensitive data here
-	user.Password = ""
-	return user, nil
+	userInsensitive := utils.ToInsensitiveUser(user)
+	if err != nil {
+		return nil, err
+	}
+	return userInsensitive, nil
 }
 
 func (u *User) AddGameToUser(ctx context.Context, user *models.User) error {
 	//todo: finish the logic here
 	return nil
+}
+
+func (u *User) ModifyUser(userInsensitive *models.UserInsensitive) error {
+
+	err := u.UserMapper.UpdateUser(context.Background(), userInsensitive)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *User) GetUser(ID uint) *models.UserInsensitive {
+	user, err := u.UserMapper.GetUserById(context.Background(), ID)
+
+	userInsensitive := &models.UserInsensitive{
+		Model: gorm.Model{
+			ID:        user.ID,
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: user.UpdatedAt,
+			DeletedAt: user.DeletedAt,
+		},
+		Username:  user.Username,
+		Email:     user.Email,
+		Nickname:  user.Nickname,
+		Games:     user.Games,
+		SteamCode: user.SteamCode,
+	}
+
+	if err != nil {
+		return nil
+	}
+	return userInsensitive
 }

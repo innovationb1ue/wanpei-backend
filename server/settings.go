@@ -18,6 +18,9 @@ type Settings struct {
 	WriteWait       time.Duration
 	MaxMessageSize  int
 	HeartbeatPeriod time.Duration
+
+	// session settings
+	MaxAge time.Duration
 }
 
 func NewSettings() *Settings {
@@ -33,5 +36,6 @@ func NewSettings() *Settings {
 		WriteWait:                      5 * time.Second,
 		MaxMessageSize:                 8192,
 		HeartbeatPeriod:                3 * time.Second,
+		MaxAge:                         60 * 60 * 24 * time.Second, // 24hrs expire
 	}
 }

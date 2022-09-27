@@ -32,7 +32,7 @@ func MatchRoutes(App *gin.Engine, match Match) {
 
 func (m *Match) Start(ctx *gin.Context) {
 	// validate login status
-	user, err := utils.ValidateLoginStatus(ctx)
+	userInsensitive, err := utils.ValidateLoginStatus(ctx)
 	if err != nil {
 		ctx.JSON(404, template.BaseResponse[any]{
 			Code:    -1,
@@ -48,7 +48,7 @@ func (m *Match) Start(ctx *gin.Context) {
 	if err != nil {
 		return
 	}
-	token := m.TokenService.GenerateRandom(user.ID)
+	token := m.TokenService.GenerateRandom(userInsensitive.ID)
 	ctx.JSON(200, template.BaseResponse[string]{
 		Code:    0,
 		Message: "ok",
@@ -57,7 +57,7 @@ func (m *Match) Start(ctx *gin.Context) {
 }
 
 func (m *Match) Stop(ctx *gin.Context) {
-	user, err := utils.ValidateLoginStatus(ctx)
+	userInsensitive, err := utils.ValidateLoginStatus(ctx)
 	if err != nil {
 		ctx.JSON(404, template.BaseResponse[any]{
 			Code:    -1,
@@ -66,7 +66,7 @@ func (m *Match) Stop(ctx *gin.Context) {
 		})
 		return
 	}
-	m.MatchService.RemoveFromQueue(user.ID)
+	m.MatchService.RemoveFromQueue(userInsensitive.ID)
 	ctx.JSON(200, template.BaseResponse[any]{
 		Code:    1,
 		Message: "ok",

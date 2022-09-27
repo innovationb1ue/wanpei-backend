@@ -1,7 +1,7 @@
-create table if not exists wanpei.user_games
+-- auto-generated definition
+create table user_games
 (
-    user_id int not null
-        primary key,
+    ID      int not null,
     game_id int not null
 );
 

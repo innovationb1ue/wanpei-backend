@@ -7,8 +7,10 @@ import (
 	"go.uber.org/fx"
 	"log"
 	"net/http"
+	"wanpei-backend/controller/template"
 	"wanpei-backend/models"
 	"wanpei-backend/services"
+	"wanpei-backend/utils"
 )
 
 // User include all the services that would be used when handling the req
@@ -83,10 +85,30 @@ func (u *User) Login(ctx *gin.Context) {
 func (u *User) Current(ctx *gin.Context) {
 	session := sessions.Default(ctx)
 	if user := session.Get("user"); user != nil {
-		ctx.JSON(200, gin.H{"message": "ok", "data": user})
+		userInsensitive, ok := user.(models.UserInsensitive)
+		if !ok {
+			session.Clear()
+			_ = session.Save()
+			ctx.JSON(http.StatusBadRequest, template.BaseErrorResponse())
+			return
+		}
+		// get latest user info from database
+		newUser := u.UserService.GetUser(userInsensitive.ID)
+		session.Set("user", newUser)
+		_ = session.Save()
+		//ctx.JSON(200, gin.H{"message": "ok", "data": user})
+		ctx.JSON(200, template.BaseResponse[models.UserInsensitive]{
+			Code:    1,
+			Message: "success",
+			Data:    *newUser,
+		})
 		return
 	} else {
-		ctx.JSON(200, gin.H{"message": "no current user"})
+		ctx.JSON(200, template.BaseResponse[any]{
+			Code:    -1,
+			Message: "no current user",
+			Data:    nil,
+		})
 	}
 }
 
@@ -95,7 +117,10 @@ func (u *User) Register(c *gin.Context) {
 	email := c.PostForm("email")
 	password := c.PostForm("password")
 	if email == "" || password == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "empty fields"})
+		c.JSON(http.StatusBadRequest, template.BaseError{
+			Code:    -1,
+			Message: "empty fields",
+		})
 		return
 	}
 	user := models.User{
@@ -108,14 +133,34 @@ func (u *User) Register(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "message": "Create user failed"})
 		return
 	}
-	c.JSON(200, gin.H{"message": "ok"})
+	c.JSON(http.StatusOK, template.BaseSuccessResponse())
 }
 
-func (u *User) AddGame(ctx *gin.Context) {
-	// todo: logic here
-	return
-}
-
-func (u *User) Modify() {
-	//todo: handle user modify info request
+func (u *User) Modify(ctx *gin.Context) {
+	// validate login
+	_, err := utils.ValidateLoginStatus(ctx)
+	if err != nil {
+		ctx.JSON(400, template.BaseResponse[any]{
+			Code:    -1,
+			Message: "not logged in",
+			Data:    nil,
+		})
+		return
+	}
+	// bind to object
+	var NewUserInsensitive models.UserInsensitive
+	err = ctx.ShouldBindJSON(&NewUserInsensitive)
+	if err != nil {
+		log.Println(err)
+		ctx.JSON(400, template.BaseErrorResponse())
+		return
+	}
+	// send to service layer to handle change user info request
+	err = u.UserService.ModifyUser(&NewUserInsensitive)
+	if err != nil {
+		ctx.JSON(400, template.BaseErrorResponse())
+		return
+	}
+	// return status
+	ctx.JSON(200, template.BaseSuccessResponse())
 }

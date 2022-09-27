@@ -9,7 +9,13 @@ type User struct {
 	Username   string `json:"username,omitempty"`
 	Password   string `json:"password,omitempty" binding:"required"`
 	Email      string `json:"email" binding:"required"`
-	Nickname   string `json:"nickname" `
+	Nickname   string `json:"nickname"`
 	Games      string `json:"games"`
+	SteamCode  string `json:"steam_code"`
 	UserRole   int    `json:"user_role"`
+}
+
+// TableName indicates the target table for GORM
+func (g User) TableName() string {
+	return "users"
 }
