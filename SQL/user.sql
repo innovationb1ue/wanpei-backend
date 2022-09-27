@@ -13,6 +13,8 @@ create table users
     updated_at datetime      null,
     user_role  int default 0 not null comment '0 - normal, 1- admin',
     avatar_url varchar(256)  null comment '头像url',
-    steam_code varchar(64)   null comment 'steam好友代码'
+    steam_code varchar(64)   null comment 'steam好友代码',
+    constraint users_email_uindex
+        unique (email)
 );
 
