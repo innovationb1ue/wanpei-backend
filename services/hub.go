@@ -32,8 +32,11 @@ func (h *Hub) GetHubUsers(ID string) []models.UserSimple {
 	var users []models.UserSimple
 	for _, u := range hub.Users {
 		users = append(users, models.UserSimple{
-			Nickname:  u.Nickname,
-			AvatarURL: "",
+			ID:          u.ID,
+			Nickname:    u.Nickname,
+			AvatarURL:   "",
+			SteamCode:   u.SteamCode,
+			Description: u.Description,
 		})
 	}
 	return users

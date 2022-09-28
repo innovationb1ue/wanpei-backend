@@ -10,6 +10,7 @@ import (
 	"wanpei-backend/controller/template"
 	"wanpei-backend/models"
 	"wanpei-backend/services"
+	"wanpei-backend/utils"
 )
 
 type HubDeps struct {
@@ -45,7 +46,7 @@ func (h *HubDeps) JoinHub(ctx *gin.Context) {
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, template.BaseError{
 			Code:    -1,
-			Message: "no such JoinHub",
+			Message: "no such hub",
 		})
 		return
 	}
@@ -70,7 +71,15 @@ func (h *HubDeps) JoinHub(ctx *gin.Context) {
 }
 
 func (h *HubDeps) Users(ctx *gin.Context) {
-	// todo: decide whether is legal user to query the hub users
+	user, err := utils.ValidateLoginStatus(ctx)
+	if err != nil {
+		ctx.JSON(400, template.BaseError{
+			Code:    -1,
+			Message: "not login",
+		})
+		return
+	}
+
 	HubID := ctx.Query("HubID")
 	if HubID == "" {
 		ctx.JSON(400, template.BaseError{
@@ -80,6 +89,19 @@ func (h *HubDeps) Users(ctx *gin.Context) {
 		return
 	}
 	users := h.HubService.GetHubUsers(HubID)
+	var userIDs []uint
+	for _, u := range users {
+		userIDs = append(userIDs, u.ID)
+	}
+	isInHub := utils.Contains[uint](userIDs, user.ID)
+	if !isInHub {
+		ctx.JSON(400, template.BaseError{
+			Code:    -1,
+			Message: "not authorized",
+		})
+		return
+	}
+
 	ctx.JSON(200, template.BaseResponse[[]models.UserSimple]{Code: 2, Data: users})
 
 }

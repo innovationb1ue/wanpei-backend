@@ -20,6 +20,11 @@ func NewUser(user *mapper.User, settings *server.Settings) *User {
 }
 
 func (u *User) CreateUser(ctx context.Context, user *models.User) error {
+	// check for valid fields
+	isValid := user.ValidateChangeableUserFields()
+	if !isValid {
+		return errors.New("invalid fields")
+	}
 	// check for duplicate
 	dupUser, err := u.UserMapper.GetUserByEmail(ctx, user.Email)
 	if dupUser != nil {
@@ -73,11 +78,12 @@ func (u *User) GetUser(ID uint) *models.UserInsensitive {
 			UpdatedAt: user.UpdatedAt,
 			DeletedAt: user.DeletedAt,
 		},
-		Username:  user.Username,
-		Email:     user.Email,
-		Nickname:  user.Nickname,
-		Games:     user.Games,
-		SteamCode: user.SteamCode,
+		Username:    user.Username,
+		Email:       user.Email,
+		Nickname:    user.Nickname,
+		Games:       user.Games,
+		SteamCode:   user.SteamCode,
+		Description: user.Description,
 	}
 
 	if err != nil {
