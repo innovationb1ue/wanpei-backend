@@ -40,5 +40,14 @@ func (h *Hub) GetHubUsers(ID string) []models.UserSimple {
 		})
 	}
 	return users
+}
 
+func (h *Hub) CheckDuplicateUser(HubID string, user *models.UserInsensitive) bool {
+	users := h.GetHubUsers(HubID)
+	for _, u := range users {
+		if u.ID == user.ID {
+			return true
+		}
+	}
+	return false
 }

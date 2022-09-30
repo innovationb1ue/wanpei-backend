@@ -51,6 +51,16 @@ func (h *HubDeps) JoinHub(ctx *gin.Context) {
 		return
 	}
 
+	// check for duplication
+	if ok := h.HubService.CheckDuplicateUser(hub.ID, &user); ok {
+		log.Println("block one duplicated user")
+		ctx.JSON(http.StatusBadRequest, template.BaseError{
+			Code:    -1,
+			Message: "user already in hub",
+		})
+		return
+	}
+
 	// upgrade to Websocket
 	var upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,

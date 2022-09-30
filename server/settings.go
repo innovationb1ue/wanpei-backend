@@ -29,7 +29,7 @@ func NewSettings() *Settings {
 		Secret:                         "ggbob",
 		Addr:                           ":8096",
 		Sha256Salt:                     "salt123",
-		RedisAddr:                      "localhost:6379",
+		RedisAddr:                      "127.0.0.1:6379",
 		RedisPassword:                  "",
 		RedisMatchMakingUsersQueueName: "match:users",
 		PongWait:                       5 * time.Second,

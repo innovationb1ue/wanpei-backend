@@ -20,6 +20,12 @@ func NewRedis(settings *server.Settings) *Redis {
 		Password: settings.RedisPassword,
 		DB:       0,
 	})
+	res := rdb.Ping(context.Background())
+	if res.Err() != nil {
+		log.Fatal("redis connect failed")
+		return nil
+	}
+	log.Println("redis ok")
 	return &Redis{
 		Client:   rdb,
 		Settings: settings,

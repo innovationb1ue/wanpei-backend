@@ -35,8 +35,5 @@ func (s *Socket) GetSocket(ID uint) (*websocket.Conn, error) {
 }
 
 func (s *Socket) DeleteSocket(ID uint) {
-	if socket, ok := s.Sockets[ID]; ok {
-		_ = socket.Close()
-	}
 	delete(s.Sockets, ID)
 }

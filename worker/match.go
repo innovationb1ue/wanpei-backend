@@ -59,6 +59,7 @@ func (m *Match) MakeMatch(ctx context.Context) {
 				if allTags[gameID] != 0 {
 					go m.matchSuccess(ctx, idUint, allTags[gameID])
 					delete(allTags, gameID)
+					break // break, no need to check the rest of the tags
 				} else {
 					allTags[gameID] = idUint
 				}
@@ -79,9 +80,16 @@ func (m *Match) matchSuccess(ctx context.Context, ID1 uint, ID2 uint) {
 	}
 
 	// make a room for users & run broadcast routine
+	// todo: make hub only available for those users
 	hub := models.NewHub()
-	go hub.Run() // hub will self destroy if no user in it
+	isStopped := make(chan struct{})
+	go hub.Run(isStopped) // this thread will terminate if no user in the hub
+	// register & unregister hub to hub repo
 	m.HubMapper.RegisterNewHub(hub)
+	go func() {
+		<-isStopped // block until the hub daemon died
+		m.HubMapper.DeleteHub(hub.ID)
+	}()
 
 	// send success message back to client
 	err = socket1.WriteJSON(map[string]any{"action": "success", "data": map[string]string{"ID": hub.ID}})

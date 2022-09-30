@@ -3,17 +3,12 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"log"
-	"net"
 )
 
 func Run(App *gin.Engine, settings *Settings) error {
 	addr := settings.Addr
-	serviceLn, err := net.Listen("tcp", addr)
-	if err != nil {
-		return err
-	}
 	go func() {
-		if err = App.RunListener(serviceLn); err != nil {
+		if err := App.RunTLS(addr, "./cert/scs1664441599798_wanpei.top_server.crt", "./cert/scs1664441599798_wanpei.top_server.key"); err != nil {
 			log.Fatal(err)
 		}
 	}()

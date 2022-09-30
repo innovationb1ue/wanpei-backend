@@ -96,7 +96,6 @@ func (u *User) Current(ctx *gin.Context) {
 		newUser := u.UserService.GetUser(userInsensitive.ID)
 		session.Set("user", newUser)
 		_ = session.Save()
-		//ctx.JSON(200, gin.H{"message": "ok", "data": user})
 		ctx.JSON(200, template.BaseResponse[models.UserInsensitive]{
 			Code:    1,
 			Message: "success",

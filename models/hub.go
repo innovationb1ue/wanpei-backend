@@ -23,6 +23,8 @@ type Hub struct {
 
 	UserRegister chan *UserInsensitive
 
+	UserUnRegister chan *UserInsensitive
+
 	Users map[uint]*UserInsensitive
 
 	ID string
@@ -40,7 +42,7 @@ func NewHub() *Hub {
 	}
 }
 
-func (h *Hub) Run() {
+func (h *Hub) Run(isStopped chan<- struct{}) {
 	// close empty hub
 	ticker := time.NewTicker(100 * time.Second)
 	for {
@@ -50,7 +52,12 @@ func (h *Hub) Run() {
 		case client := <-h.Unregister:
 			if _, ok := h.Client[client]; ok {
 				delete(h.Client, client)
+				delete(h.Users, client.User.ID)
 				close(client.Send)
+			}
+		case user := <-h.UserUnRegister:
+			{
+				delete(h.Users, user.ID)
 			}
 		case user := <-h.UserRegister:
 			{
@@ -73,6 +80,7 @@ func (h *Hub) Run() {
 			{
 				if len(h.Client) == 0 {
 					log.Println("closed one hub")
+					close(isStopped)
 					return
 				}
 			}

@@ -40,6 +40,8 @@ type Client struct {
 
 	// Buffered channel of outbound messages.
 	Send chan *ChatSocketMessage
+
+	User *UserInsensitive
 }
 
 // ReadPump pumps messages from the websocket connection to the Hub.
@@ -49,6 +51,7 @@ type Client struct {
 // reads from this goroutine.
 func (c *Client) ReadPump() {
 	defer func() {
+		log.Println("unregister one")
 		c.Hub.Unregister <- c
 		_ = c.Conn.Close()
 	}()
