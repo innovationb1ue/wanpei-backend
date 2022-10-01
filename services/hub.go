@@ -1,6 +1,7 @@
 package services
 
 import (
+	"log"
 	"wanpei-backend/mapper"
 	"wanpei-backend/models"
 )
@@ -13,6 +14,17 @@ func NewHub(hubMapper *mapper.Hub) *Hub {
 	return &Hub{
 		HubMapper: hubMapper,
 	}
+}
+
+func (h *Hub) CheckUserValidity(hubID string, user *models.UserInsensitive) bool {
+	checks := []func(string, *models.UserInsensitive) bool{h.CheckDuplicateUser, h.CheckValidUser}
+	for _, c := range checks {
+		res := c(hubID, user)
+		if !res {
+			return false
+		}
+	}
+	return true
 }
 
 func (h *Hub) GetHub(ID string) (*models.Hub, error) {
@@ -46,6 +58,20 @@ func (h *Hub) CheckDuplicateUser(HubID string, user *models.UserInsensitive) boo
 	users := h.GetHubUsers(HubID)
 	for _, u := range users {
 		if u.ID == user.ID {
+			return true
+		}
+	}
+	return false
+}
+
+func (h *Hub) CheckValidUser(hubID string, user *models.UserInsensitive) bool {
+	hub, err := h.GetHub(hubID)
+	if err != nil {
+		log.Println("hub not exist")
+	}
+	availableUsers := hub.AvailableUserID
+	for _, u := range availableUsers {
+		if u == user.ID {
 			return true
 		}
 	}

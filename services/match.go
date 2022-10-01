@@ -49,7 +49,7 @@ func (m *Match) CheckUserInMatchPool(ID uint) (bool, error) {
 		return false, nil
 	}
 	if err != nil {
-		return false, errors.New("unknown error with redis")
+		return false, errors.New("unknown error with redis. check redis connection or version. ")
 	}
 	return true, nil
 }

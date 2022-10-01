@@ -29,3 +29,11 @@ func (h *Hub) GetHub(name string) (*models.Hub, error) {
 		return hub, nil
 	}
 }
+
+func (h *Hub) GetHubValidUsers(name string) []uint {
+	hub, err := h.GetHub(name)
+	if err != nil {
+		return nil
+	}
+	return hub.AvailableUserID
+}

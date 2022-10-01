@@ -28,18 +28,26 @@ type Hub struct {
 	Users map[uint]*UserInsensitive
 
 	ID string
+
+	AvailableUserID []uint
 }
 
 func NewHub() *Hub {
 	return &Hub{
-		Client:       make(map[*Client]bool),
-		Broadcast:    make(chan *ChatSocketMessage),
-		Register:     make(chan *Client),
-		Unregister:   make(chan *Client),
-		UserRegister: make(chan *UserInsensitive),
-		Users:        make(map[uint]*UserInsensitive),
-		ID:           uuid.NewString(),
+		Client:          make(map[*Client]bool),
+		Broadcast:       make(chan *ChatSocketMessage),
+		Register:        make(chan *Client),
+		Unregister:      make(chan *Client),
+		UserRegister:    make(chan *UserInsensitive),
+		UserUnRegister:  make(chan *UserInsensitive),
+		Users:           make(map[uint]*UserInsensitive),
+		ID:              uuid.NewString(),
+		AvailableUserID: []uint{},
 	}
+}
+
+func (h *Hub) AppendAvailableUser(ID uint) {
+	h.AvailableUserID = append(h.AvailableUserID, ID)
 }
 
 func (h *Hub) Run(isStopped chan<- struct{}) {

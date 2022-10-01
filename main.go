@@ -17,16 +17,22 @@ func main() {
 	gob.Register(models.UserInsensitive{})
 	// start app
 	app := fx.New(
+		// get envirnoment variables
+		fx.Provide(server.GetEnv),
 		// provide infrastructures constructors
 		fx.Provide(mapper.NewDbConn, server.NewApp, models.NewSessionStore, server.NewSettings),
+		// creat local repos
+		repo.CreateRepo(),
+		// register all mappers
+		mapper.RegisterMapper(),
+		// register services
+		services.RegisterServices(),
 		// register all controllers by providing fx.Option
 		controller.RegisterControllers(),
-		mapper.RegisterMapper(),
-		services.RegisterServices(),
-		repo.CreateRepo(),
+		// Start matchmaking worker goroutine
 		fx.Provide(worker.NewMatch),
 		fx.Invoke(worker.MatchWorker),
-		// invoke functions should run before the app start
+		// run gin app
 		fx.Invoke(server.Run),
 	)
 	app.Run() // run forever

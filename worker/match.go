@@ -39,6 +39,7 @@ func MatchWorker(match *Match) {
 func (m *Match) MakeMatch(ctx context.Context) {
 	ticker := time.NewTicker(3 * time.Second)
 	for {
+		// timed task
 		<-ticker.C
 		// get all users in Redis
 		userIDs := m.RedisMapper.Client.LRange(ctx, "match:users", 0, -1).Val()
@@ -57,9 +58,10 @@ func (m *Match) MakeMatch(ctx context.Context) {
 			// iter through tags of a single user
 			for _, gameID := range userGameIDs {
 				if allTags[gameID] != 0 {
+					// simultaneously handle matched users
 					go m.matchSuccess(ctx, idUint, allTags[gameID])
-					delete(allTags, gameID)
-					break // break, no need to check the rest of the tags
+					delete(allTags, gameID) // delete key in the game count map
+					break                   // break, no need to check the rest of the tags
 				} else {
 					allTags[gameID] = idUint
 				}
@@ -82,6 +84,8 @@ func (m *Match) matchSuccess(ctx context.Context, ID1 uint, ID2 uint) {
 	// make a room for users & run broadcast routine
 	// todo: make hub only available for those users
 	hub := models.NewHub()
+	hub.AppendAvailableUser(ID1)
+	hub.AppendAvailableUser(ID2)
 	isStopped := make(chan struct{})
 	go hub.Run(isStopped) // this thread will terminate if no user in the hub
 	// register & unregister hub to hub repo

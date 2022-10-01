@@ -7,7 +7,7 @@ import (
 )
 
 func NewSessionStore(settings *server.Settings) *cookie.Store {
-	CookieMgr := cookie.NewStore([]byte(settings.Secret))
+	CookieMgr := cookie.NewStore([]byte(settings.CookieSecret))
 	CookieMgr.Options(sessions.Options{
 		Path:     "/",
 		Domain:   "",
