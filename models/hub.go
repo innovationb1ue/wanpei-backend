@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"github.com/google/uuid"
 	"log"
 	"time"
@@ -10,20 +11,17 @@ import (
 // Client.
 type Hub struct {
 	// Registered Client.
+	//todo: reformat this map to ID->Client
 	Client map[*Client]bool
 
 	// Inbound messages from the Client.
 	Broadcast chan *ChatSocketMessage
 
-	// Register requests from the Client.
-	Register chan *Client
+	// ClientRegister requests from the Client.
+	ClientRegister chan *Client
 
 	// Unregister requests from Client.
 	Unregister chan *Client
-
-	UserRegister chan *UserInsensitive
-
-	UserUnRegister chan *UserInsensitive
 
 	Users map[uint]*UserInsensitive
 
@@ -36,10 +34,8 @@ func NewHub() *Hub {
 	return &Hub{
 		Client:          make(map[*Client]bool),
 		Broadcast:       make(chan *ChatSocketMessage),
-		Register:        make(chan *Client),
+		ClientRegister:  make(chan *Client),
 		Unregister:      make(chan *Client),
-		UserRegister:    make(chan *UserInsensitive),
-		UserUnRegister:  make(chan *UserInsensitive),
 		Users:           make(map[uint]*UserInsensitive),
 		ID:              uuid.NewString(),
 		AvailableUserID: []uint{},
@@ -50,28 +46,23 @@ func (h *Hub) AppendAvailableUser(ID uint) {
 	h.AvailableUserID = append(h.AvailableUserID, ID)
 }
 
-func (h *Hub) Run(isStopped chan<- struct{}) {
+// Run is self-managed hub daemon thread. Will destroy if there is no one in the hub
+func (h *Hub) Run(cancel context.CancelFunc) {
 	// close empty hub
 	ticker := time.NewTicker(100 * time.Second)
 	for {
 		select {
-		case client := <-h.Register:
+		case client := <-h.ClientRegister:
+			log.Println("register one user & client", client)
 			h.Client[client] = true
+			h.Users[client.User.ID] = client.User
 		case client := <-h.Unregister:
 			if _, ok := h.Client[client]; ok {
 				delete(h.Client, client)
 				delete(h.Users, client.User.ID)
 				close(client.Send)
 			}
-		case user := <-h.UserUnRegister:
-			{
-				delete(h.Users, user.ID)
-			}
-		case user := <-h.UserRegister:
-			{
-				log.Println("register one user", user)
-				h.Users[user.ID] = user
-			}
+		// broadcast message
 		case message := <-h.Broadcast:
 			// iter through clients and send messages one by one
 			for client := range h.Client {
@@ -88,11 +79,10 @@ func (h *Hub) Run(isStopped chan<- struct{}) {
 			{
 				if len(h.Client) == 0 {
 					log.Println("closed one hub")
-					close(isStopped)
+					cancel()
 					return
 				}
 			}
 		}
-
 	}
 }

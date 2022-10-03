@@ -39,7 +39,7 @@ func MatchWorker(match *Match) {
 func (m *Match) MakeMatch(ctx context.Context) {
 	ticker := time.NewTicker(3 * time.Second)
 	for {
-		// timed task
+		// timed task: fetch users in queue and match them
 		<-ticker.C
 		// get all users in Redis
 		userIDs := m.RedisMapper.Client.LRange(ctx, "match:users", 0, -1).Val()
@@ -59,7 +59,7 @@ func (m *Match) MakeMatch(ctx context.Context) {
 			for _, gameID := range userGameIDs {
 				if allTags[gameID] != 0 {
 					// simultaneously handle matched users
-					go m.matchSuccess(ctx, idUint, allTags[gameID])
+					go m.matchSuccess(context.Background(), idUint, allTags[gameID])
 					delete(allTags, gameID) // delete key in the game count map
 					break                   // break, no need to check the rest of the tags
 				} else {
@@ -82,16 +82,18 @@ func (m *Match) matchSuccess(ctx context.Context, ID1 uint, ID2 uint) {
 	}
 
 	// make a room for users & run broadcast routine
-	// todo: make hub only available for those users
 	hub := models.NewHub()
 	hub.AppendAvailableUser(ID1)
 	hub.AppendAvailableUser(ID2)
-	isStopped := make(chan struct{})
-	go hub.Run(isStopped) // this thread will terminate if no user in the hub
-	// register & unregister hub to hub repo
-	m.HubMapper.RegisterNewHub(hub)
+	hubCtx, cancel := context.WithCancel(ctx)
+	// start the hub broadcasting thread
+	go hub.Run(cancel) // will cancel the whole context if the hub is deprecated when no one in it
 	go func() {
-		<-isStopped // block until the hub daemon died
+		// register self to hub repo
+		m.HubMapper.RegisterNewHub(hub)
+		// block until the hub is done.
+		<-hubCtx.Done()
+		// unregister self to hub
 		m.HubMapper.DeleteHub(hub.ID)
 	}()
 
@@ -110,7 +112,7 @@ func (m *Match) matchSuccess(ctx context.Context, ID1 uint, ID2 uint) {
 	_ = m.RedisMapper.RemoveUserFromMatchPool(ID2)
 
 	// close sockets without handling any further error.
-	// UserRegister got matched so there is no need to preserve this result-informing websocket connections anymore.
+	// Users got matched so there is no need to preserve this result-informing websocket connections anymore.
 	_ = socket1.Close()
 	_ = socket2.Close()
 }

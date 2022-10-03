@@ -41,7 +41,7 @@ type Client struct {
 	// Buffered channel of outbound messages.
 	Send chan *ChatSocketMessage
 
-	User *UserInsensitive
+	User *UserInsensitive // point to specific user using this pipe
 }
 
 // ReadPump pumps messages from the websocket connection to the Hub.
@@ -71,8 +71,8 @@ func (c *Client) ReadPump() {
 		err = json.Unmarshal(message, &receivedMsg)
 		if err != nil {
 			log.Println("cant phrase received chat socket message. ")
+			continue
 		}
-
 		c.Hub.Broadcast <- receivedMsg
 	}
 }
@@ -91,7 +91,7 @@ func (c *Client) WritePump() {
 	for {
 		select {
 		case message, ok := <-c.Send:
-			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+			_ = c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			// The HubService closed the channel.
 			if !ok {
 				_ = c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
@@ -107,7 +107,7 @@ func (c *Client) WritePump() {
 			}
 
 		case <-ticker.C:
-			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+			_ = c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}
