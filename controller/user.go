@@ -21,12 +21,16 @@ type User struct {
 }
 
 func UserRoutes(App *gin.Engine, user User) {
+	// dont need to check login status
 	App.POST("/user/register", user.Register)
 	App.POST("/user/login", user.Login)
-	App.POST("/user/logout", user.LogOut)
-	App.GET("/user/logout", user.LogOut)
-	App.GET("/user/current", user.Current)
-	App.POST("/user/modify", user.Modify)
+	// check login status routes
+	UserGroup := App.Group("/user")
+	UserGroup.Use(ValidateLoginStatus)
+	UserGroup.POST("/logout", user.LogOut)
+	UserGroup.GET("/logout", user.LogOut)
+	UserGroup.GET("/current", user.Current)
+	UserGroup.POST("/modify", user.Modify)
 }
 
 func (u *User) LogOut(ctx *gin.Context) {
@@ -85,13 +89,7 @@ func (u *User) Login(ctx *gin.Context) {
 func (u *User) Current(ctx *gin.Context) {
 	session := sessions.Default(ctx)
 	if user := session.Get("user"); user != nil {
-		userInsensitive, ok := user.(models.UserInsensitive)
-		if !ok {
-			session.Clear()
-			_ = session.Save()
-			ctx.JSON(http.StatusBadRequest, template.BaseErrorResponse())
-			return
-		}
+		userInsensitive := user.(models.UserInsensitive)
 		// get latest user info from database
 		newUser := u.UserService.GetUser(userInsensitive.ID)
 		session.Set("user", newUser)

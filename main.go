@@ -17,7 +17,7 @@ func main() {
 	gob.Register(models.UserInsensitive{})
 	// start app
 	app := fx.New(
-		// get envirnoment variables
+		// get environment variables
 		fx.Provide(server.GetEnv),
 		// provide infrastructures constructors
 		fx.Provide(mapper.NewDbConn, server.NewApp, models.NewSessionStore, server.NewSettings),

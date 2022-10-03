@@ -11,7 +11,8 @@ import (
 )
 
 func TestRedisConnSet(t *testing.T) {
-	settings := server.NewSettings()
+	env := server.GetEnv()
+	settings := server.NewSettings(env)
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     settings.RedisAddr,
 		Password: settings.RedisPassword,
@@ -41,7 +42,8 @@ func TestRedisConnSet(t *testing.T) {
 }
 
 func TestLPos(t *testing.T) {
-	settings := server.NewSettings()
+	env := server.GetEnv()
+	settings := server.NewSettings(env)
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     settings.RedisAddr,
 		Password: settings.RedisPassword,

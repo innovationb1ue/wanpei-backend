@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"go.uber.org/fx"
@@ -10,7 +9,6 @@ import (
 	"wanpei-backend/controller/template"
 	"wanpei-backend/models"
 	"wanpei-backend/services"
-	"wanpei-backend/utils"
 )
 
 type HubDeps struct {
@@ -20,8 +18,10 @@ type HubDeps struct {
 }
 
 func HubRoutes(App *gin.Engine, Hub HubDeps) {
-	App.GET("/hub/join", Hub.join)
-	App.GET("/hub/users", Hub.users)
+	HubGroup := App.Group("/hub")
+	HubGroup.Use(ValidateLoginStatus)
+	HubGroup.GET("/join", Hub.join)
+	HubGroup.GET("/users", Hub.users)
 }
 
 // join establish Websockets with users.
@@ -35,12 +35,7 @@ func (h *HubDeps) join(ctx *gin.Context) {
 		})
 		return
 	}
-	session := sessions.Default(ctx)
-	userInterface := session.Get("user")
-	if userInterface == nil {
-		return
-	}
-	user := userInterface.(models.UserInsensitive)
+	user := ctx.MustGet("user").(models.UserInsensitive)
 
 	// get the hub
 	hub, err := h.HubService.GetHub(hubID)
@@ -82,14 +77,7 @@ func (h *HubDeps) join(ctx *gin.Context) {
 }
 
 func (h *HubDeps) users(ctx *gin.Context) {
-	user, err := utils.ValidateLoginStatus(ctx)
-	if err != nil {
-		ctx.JSON(400, template.BaseError{
-			Code:    -1,
-			Message: "not login",
-		})
-		return
-	}
+	user := ctx.MustGet("user").(models.UserInsensitive)
 	// get query param HubID
 	HubID := ctx.Query("HubID")
 	if HubID == "" {
@@ -105,7 +93,7 @@ func (h *HubDeps) users(ctx *gin.Context) {
 	for _, u := range users {
 		userIDs = append(userIDs, u.ID)
 	}
-	isValid := h.HubService.CheckValidUser(HubID, user)
+	isValid := h.HubService.CheckValidUser(HubID, &user)
 	if !isValid {
 		ctx.JSON(400, template.BaseError{
 			Code:    -1,

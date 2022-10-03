@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"go.uber.org/fx"
@@ -9,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 	"wanpei-backend/controller/template"
+	"wanpei-backend/models"
 	"wanpei-backend/repo"
 	"wanpei-backend/services"
 	"wanpei-backend/utils"
@@ -24,27 +24,21 @@ type Match struct {
 }
 
 func MatchRoutes(App *gin.Engine, match Match) {
-	App.POST("/match/start", match.Start)
-	App.POST("/match/stop", match.Stop)
-	App.GET("/match/socket", match.Socket)
-	App.GET("/match/current", match.Current)
+	matchGroup := App.Group("/match")
+	matchGroup.Use(ValidateLoginStatus)
+	matchGroup.POST("/start", match.Start)
+	matchGroup.POST("/stop", match.Stop)
+	matchGroup.GET("/socket", match.Socket)
+	matchGroup.GET("/current", match.Current)
 }
 
 func (m *Match) Start(ctx *gin.Context) {
-	// validate login status
-	userInsensitive, err := utils.ValidateLoginStatus(ctx)
-	if err != nil {
-		ctx.JSON(404, template.BaseResponse[any]{
-			Code:    -1,
-			Message: "Not logged in",
-			Data:    nil,
-		})
-		return
-	}
+	userInsensitive := ctx.MustGet("user").(models.UserInsensitive)
+	// create an empty struct to receive query params
 	jsonHolder := struct {
 		SelectedGame []int `json:"selectedGame"`
 	}{}
-	err = ctx.ShouldBindJSON(&jsonHolder)
+	err := ctx.ShouldBindJSON(&jsonHolder)
 	if err != nil {
 		return
 	}
@@ -57,15 +51,7 @@ func (m *Match) Start(ctx *gin.Context) {
 }
 
 func (m *Match) Stop(ctx *gin.Context) {
-	userInsensitive, err := utils.ValidateLoginStatus(ctx)
-	if err != nil {
-		ctx.JSON(404, template.BaseResponse[any]{
-			Code:    -1,
-			Message: "Not logged in",
-			Data:    nil,
-		})
-		return
-	}
+	userInsensitive := ctx.MustGet("user").(models.UserInsensitive)
 	m.MatchService.RemoveFromQueue(userInsensitive.ID)
 	ctx.JSON(200, template.BaseResponse[any]{
 		Code:    1,
@@ -120,10 +106,12 @@ func (m *Match) Socket(ctx *gin.Context) {
 }
 
 func (m *Match) Current(ctx *gin.Context) {
-	user := sessions.Default(ctx).Get("user")
-	if user != nil {
+	userObj, ok := ctx.Get("user")
+	log.Print("context user = ", userObj)
+	if ok && userObj != nil {
+		user := userObj.(models.UserInsensitive)
 		ctx.JSON(200, gin.H{"data": user})
 	} else {
-		ctx.JSON(200, "failed")
+		return
 	}
 }

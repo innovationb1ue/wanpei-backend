@@ -8,8 +8,11 @@ import (
 )
 
 func NewApp(SessionMgr *cookie.Store) *gin.Engine {
-	r := gin.Default()
+	r := gin.New()
 	r.Use(sessions.Sessions("wanpei-session", *SessionMgr))
 	r.Use(cors.Default())
+	r.Use(gin.CustomRecovery(Recovery))
+	r.Use(gin.Logger())
+
 	return r
 }
