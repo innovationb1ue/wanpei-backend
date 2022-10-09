@@ -29,6 +29,7 @@ type Settings struct {
 }
 
 func NewSettings(env *Env) *Settings {
+	//todo: refactor this to all env configs
 	if env.Vars["APP_TARGET"] == "prod" {
 		// production settings
 		return &Settings{
@@ -36,7 +37,7 @@ func NewSettings(env *Env) *Settings {
 			Addr:                           ":8096",
 			https:                          true,
 			Sha256Salt:                     "salt123",
-			RedisAddr:                      "127.0.0.1:6379",
+			RedisAddr:                      "redis:6379",
 			RedisPassword:                  "",
 			RedisMatchMakingUsersQueueName: "match:users",
 			PongWait:                       5 * time.Second,

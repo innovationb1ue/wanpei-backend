@@ -15,6 +15,7 @@ type Redis struct {
 
 // NewRedis provide the redis Client for the App
 func NewRedis(settings *server.Settings) *Redis {
+	log.Println("connecting to redis server at ", settings.RedisAddr)
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     settings.RedisAddr,
 		Password: settings.RedisPassword,
