@@ -1,7 +1,7 @@
 ## 玩配 - 后端
 
 ## DEMO (might need a VPN)
-wanpei.vercel.app
+[vercel](wanpei.vercel.app)
 
 
 ### Go技术栈
