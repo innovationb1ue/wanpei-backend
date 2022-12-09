@@ -21,9 +21,9 @@ func NewUser(user *mapper.User, settings *server.Settings) *User {
 
 func (u *User) CreateUser(ctx context.Context, user *models.User) error {
 	// check for valid fields
-	isValid := user.ValidateChangeableUserFields()
-	if !isValid {
-		return errors.New("invalid fields")
+	fieldErr := user.ValidateChangeableUserFields()
+	if fieldErr != nil {
+		return fieldErr
 	}
 	// check for duplicate
 	dupUser, err := u.UserMapper.GetUserByEmail(ctx, user.Email)

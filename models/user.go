@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"gorm.io/gorm"
 	"strings"
 )
@@ -22,15 +23,21 @@ func (u User) TableName() string {
 	return "users"
 }
 
-func (u User) ValidateChangeableUserFields() bool {
-	if !strings.Contains(u.Email, "@") || len(u.Email) < 8 || len(u.Email) > 20 {
-		return false
+func (u User) ValidateChangeableUserFields() error {
+	if !strings.Contains(u.Email, "@") {
+		return errors.New("Email must have an symbol @. ")
+	}
+	if len(u.Email) < 6 {
+		return errors.New("email must be longer than 6 chars")
+	}
+	if len(u.Email) > 20 {
+		return errors.New("email too long")
 	}
 	if len(u.Nickname) > 20 {
-		return false
+		return errors.New("Nickname too long. ")
 	}
 	if len(u.SteamCode) > 30 {
-		return false
+		return errors.New("steam code too long. That's not possible")
 	}
-	return true
+	return nil
 }

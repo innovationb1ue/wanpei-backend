@@ -127,7 +127,7 @@ func (u *User) Register(c *gin.Context) {
 	// call user service to handle the logic
 	err := u.UserService.CreateUser(c, &user)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "message": "Create user failed"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Create user failed", "message": err.Error(), "code": -1})
 		return
 	}
 	c.JSON(http.StatusOK, template.BaseSuccessResponse())
