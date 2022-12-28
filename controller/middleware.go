@@ -17,6 +17,7 @@ func ValidateLoginStatus(ctx *gin.Context) {
 			Code:    -1,
 			Message: "not logged in",
 		})
+		ctx.Abort()
 		return
 	}
 	ctx.Set("user", userObj.(models.UserInsensitive))

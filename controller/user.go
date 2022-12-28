@@ -27,6 +27,7 @@ func UserRoutes(App *gin.Engine, user User) {
 	// check login status routes
 	UserGroup := App.Group("/user")
 	UserGroup.Use(ValidateLoginStatus)
+	// those routes below require login
 	UserGroup.POST("/logout", user.LogOut)
 	UserGroup.GET("/logout", user.LogOut)
 	UserGroup.GET("/current", user.Current)
@@ -106,6 +107,7 @@ func (u *User) Current(ctx *gin.Context) {
 			Message: "no current user",
 			Data:    nil,
 		})
+		return
 	}
 }
 
