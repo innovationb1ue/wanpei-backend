@@ -81,7 +81,7 @@ func (u *User) Login(ctx *gin.Context) {
 	session.Set("user", user)
 	err = session.Save()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return
 	}
 	ctx.JSON(200, gin.H{"message": "ok"})

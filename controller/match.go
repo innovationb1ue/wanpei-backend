@@ -30,6 +30,7 @@ func MatchRoutes(App *gin.Engine, match Match) {
 	matchGroup.POST("/stop", match.Stop)
 	matchGroup.GET("/socket", match.Socket)
 	matchGroup.GET("/current", match.Current)
+	matchGroup.GET("/count", match.PlayerCount)
 }
 
 func (m *Match) Start(ctx *gin.Context) {
@@ -114,4 +115,13 @@ func (m *Match) Current(ctx *gin.Context) {
 	} else {
 		return
 	}
+}
+
+func (m *Match) PlayerCount(ctx *gin.Context) {
+	queueLength, err := m.MatchService.QueueLength()
+	if err != nil {
+		ctx.JSON(200, gin.H{"count": 0})
+		return
+	}
+	ctx.JSON(200, gin.H{"count": queueLength})
 }

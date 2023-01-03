@@ -89,3 +89,16 @@ func ping(ws *websocket.Conn, done chan struct{}, dead chan struct{}, settings *
 		}
 	}
 }
+
+func (m *Match) QueueLength() (uint, error) {
+	ctx := context.Background()
+	res, err := m.RedisMapper.Client.LLen(ctx, m.Settings.RedisMatchMakingUsersQueueName).Result()
+	if err == redis.Nil {
+		return 0, nil
+	}
+	if err != nil {
+		return 0, errors.New("unknown error when getting queue length. ")
+	}
+	return uint(res), nil
+
+}
