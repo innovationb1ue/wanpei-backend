@@ -5,12 +5,13 @@ import (
 	"log"
 )
 
-func Run(App *gin.Engine, settings *Settings) error {
+func Run(App *gin.Engine, settings *Settings, env *Env) error {
 	addr := settings.Addr
 	isHttps := settings.https
 	if isHttps {
 		go func() {
-			if err := App.RunTLS(addr, "./cert/scs1664441599798_wanpei.top_server.crt", "./cert/scs1664441599798_wanpei.top_server.key"); err != nil {
+			log.Println(env.Vars["cert_file"], env.Vars["cert_key"])
+			if err := App.RunTLS(addr, env.Vars["cert_file"], env.Vars["cert_key"]); err != nil {
 				log.Fatal(err)
 			}
 		}()

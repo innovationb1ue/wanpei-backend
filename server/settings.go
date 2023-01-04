@@ -37,7 +37,7 @@ func NewSettings(env *Env) *Settings {
 			Addr:                           ":8096",
 			https:                          true,
 			Sha256Salt:                     "salt123",
-			RedisAddr:                      "redis:6379",
+			RedisAddr:                      "127.0.0.1:6379",
 			RedisPassword:                  "",
 			RedisMatchMakingUsersQueueName: "match:users",
 			PongWait:                       5 * time.Second,

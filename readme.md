@@ -7,9 +7,13 @@
 ### Go技术栈
 Gin + fx + GORM + Redis + Gorilla/Websocket + Gorilla/sessions ... 
 
+### Requirements
+* MySQL
 
-### deploy settings
-set enviroment variable then run 
+
+
+### Deploy settings
+set enviroment variable
 > APP_TARGET=prod
 
 ### 启动开发模式

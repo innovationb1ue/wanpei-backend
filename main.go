@@ -13,6 +13,7 @@ import (
 )
 
 func main() {
+	// register models for encoding
 	gob.Register(models.User{})
 	gob.Register(models.UserInsensitive{})
 	// start app
